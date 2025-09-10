@@ -68,6 +68,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.tennisapp.ui.screens.AuthorizationContent
+import com.example.tennisapp.ui.screens.MainScreen
 import kotlinx.coroutines.delay
 import java.nio.file.WatchEvent
 
@@ -81,93 +83,13 @@ class MainActivity : ComponentActivity() {
                 MainScreen()
             }
         }
-    }
-}
-
-@Composable
-fun MainScreen() {
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-
-    Scaffold (
-        topBar = {
-            if (currentDestination?.route != "splash_screen") {
-                AppBar(
-                    title = when (currentDestination?.route) {
-                        "main_screen" -> "Главная"
-                        "booking_screen" -> "Бронирование"
-                        "profile_screen" -> "Профиль"
-                        "notifications_screen" -> "Уведомления"
-                        else -> "Tennis App"
-                    },
-                    onNotificationsClick = {
-                        navController.navigate("notifications_screen")
-                    }
-                )
-            }
-        },
-        bottomBar = {
-            if (currentDestination?.route != "splash_screen" &&
-                currentDestination?.route != "notifications_screen") {
-                BottomBar(
-                    navController = navController,
-                    currentDestination = currentDestination
-                )
-            }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "splash_screen",
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable ("splash_screen") {
-                SplashScreen(navController = navController)
-            }
-            composable ("main_screen") {
-                MainContent()
-            }
-            composable ("booking_screen") {
-                BookingContent()
-            }
-            composable ("profile_screen") {
-                ProfileContent()
-            }
-            composable ("notifications_screen"){
-                NotificationsContent()
-            }
-        }
-    }
-}
-
-@Composable
-fun SplashScreen(navController: NavController) {
-    val scale = remember {
-        androidx.compose.animation.core.Animatable(0f)
-    }
-
-    // Анимация
-    LaunchedEffect(key1 = true) {
-        scale.animateTo(
-            targetValue = 0.7f,
-            animationSpec = tween(
-                durationMillis = 800,
-                easing = {
-                    OvershootInterpolator(4f).getInterpolation(it)
-                }))
-        delay(3000L)
-        navController.navigate("main_screen") {
-            popUpTo("splash_screen") { inclusive = true }
-        }
-    }
-
-    // Изображение
-    Box(contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()) {
-        Image(painter = painterResource(id = R.drawable.ic_tennis_men),
-            contentDescription = "Логотип",
-            modifier = Modifier.scale(scale.value))
+//        setContent {
+//            AuthorizationContent(
+//                onAuthorizationClick = { phone, password ->
+//                    TODO()// тут отправляешь запрос на сервер (PHP/MySQL)
+//                }
+//            )
+//        }
     }
 }
 
@@ -181,116 +103,11 @@ fun MainContent() {
     )
 }
 
-@Composable
-fun BookingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Booking Screen", fontSize = 24.sp, fontFamily = roboto)
-    }
-}
-
-@Composable
-fun ProfileContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Profile Screen", fontSize = 24.sp, fontFamily = roboto)
-    }
-}
-
-@Composable
-fun NotificationsContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Notifications Screen", fontSize = 24.sp, fontFamily = roboto)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AppBar(
-    title: String = "Tennis App",
-    onNotificationsClick: () -> Unit = {}
-) {
-    CenterAlignedTopAppBar(
-        title = {
-            Text(text = title)
-        },
-        actions = {
-            IconButton(onClick = onNotificationsClick) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Уведомления"
-                )
-            }
-        }
-    )
-}
-
 data class BottomNavItem(
     val route: String,
     val title: String,
     val icon: ImageVector
 )
-
-@Composable
-fun BottomBar(
-    navController: NavController,
-    currentDestination: NavDestination?
-) {
-    val items = listOf (
-        BottomNavItem (
-            route = "main_screen",
-            title = "Главная",
-            icon = Icons.Default.Home
-        ),
-        BottomNavItem (
-            route = "booking_screen",
-            title = "Бронирование",
-            icon = Icons.Default.DateRange
-        ),
-        BottomNavItem (
-            route = "profile_screen",
-            title = "Профиль",
-            icon = Icons.Default.AccountCircle
-        )
-    )
-
-    NavigationBar {
-        items.forEach { item ->
-            val selected = currentDestination?.route == item.route
-
-            NavigationBarItem(
-                selected = selected,
-                onClick = {
-                    if (currentDestination?.route != item.route) {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                },
-                icon = {
-                    Icon (
-                        imageVector = item.icon,
-                        contentDescription = item.title
-                    )
-                },
-                label = {
-                    Text(text = item.title)
-                }
-            )
-        }
-    }
-}
 
 @Composable
 fun MonthlyStats(

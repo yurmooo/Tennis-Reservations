@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation ("com.hbb20:ccp:2.7.3")
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha06")
     implementation(libs.androidx.ui.text.google.fonts)
     testImplementation(libs.junit)

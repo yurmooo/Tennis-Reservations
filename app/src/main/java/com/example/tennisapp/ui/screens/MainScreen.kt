@@ -1,0 +1,75 @@
+package com.example.tennisapp.ui.screens
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.tennisapp.ui.components.AppBar
+import com.example.tennisapp.MainContent
+import com.example.tennisapp.ui.screens.AuthorizationContent
+import com.example.tennisapp.ui.components.BottomBar
+
+@Composable
+fun MainScreen() {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    Scaffold (
+        topBar = {
+            if (currentDestination?.route != "splash_screen") {
+                AppBar(
+                    title = when (currentDestination?.route) {
+                        "main_screen" -> "Главная"
+                        "booking_screen" -> "Бронирование"
+                        "profile_screen" -> "Профиль"
+                        "notifications_screen" -> "Уведомления"
+                        else -> "Tennis App"
+                    },
+                    onNotificationsClick = {
+                        navController.navigate("notifications_screen")
+                    }
+                )
+            }
+        },
+        bottomBar = {
+            if (currentDestination?.route != "splash_screen" &&
+                currentDestination?.route != "notifications_screen") {
+                BottomBar(
+                    navController = navController,
+                    currentDestination = currentDestination
+                )
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "splash_screen",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable ("splash_screen") {
+                SplashScreen(navController = navController)
+            }
+            composable ("main_screen") {
+                MainContent()
+            }
+            composable ("booking_screen") {
+                BookingContent()
+            }
+            composable ("profile_screen") {
+                ProfileContent()
+            }
+            composable ("notifications_screen"){
+                NotificationsContent()
+            }
+//            composable ("authorization_screen") {
+//                AuthorizationContent(onAuthorizationClick = TODO())
+//            }
+        }
+    }
+}
