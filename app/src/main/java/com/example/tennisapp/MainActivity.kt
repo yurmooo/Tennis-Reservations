@@ -1,15 +1,9 @@
 package com.example.tennisapp
 
-import android.graphics.drawable.Icon
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.compose.runtime.getValue
 import android.os.Bundle
-import android.view.animation.OvershootInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -24,78 +18,53 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle.Companion.Stroke
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.ui.screens.AuthorizationContent
 import com.example.tennisapp.ui.screens.MainScreen
-import kotlinx.coroutines.delay
-import java.nio.file.WatchEvent
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 val roboto = FontFamily ( Font(R.font.roboto) )
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            Surface(color = Color.White, modifier = Modifier.fillMaxSize()) {
-                MainScreen()
+
+        lifecycleScope.launch {
+            val clientId = UserDataStore.getClientId(this@MainActivity)
+            setContent {
+                if (clientId != null) {
+                    MainScreen()
+                } else {
+                    AuthorizationContent(
+                        onAuthorizationClick = { phone, password -> }
+                    )
+                }
             }
         }
-//        setContent {
-//            AuthorizationContent(
-//                onAuthorizationClick = { phone, password ->
-//                    TODO()// тут отправляешь запрос на сервер (PHP/MySQL)
-//                }
-//            )
-//        }
     }
 }
 
 @Composable
 fun MainContent() {
-    MonthlyStats( //Передать реальные данные
+    MonthlyStats(
         hours = 12,
         maxHours = 50,
         visits = 7,
@@ -120,12 +89,12 @@ fun MonthlyStats(
 
     Card(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp), //отступы у карточек
-        shape = RoundedCornerShape(16.dp), //закругленные углы
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) //Тень
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -134,13 +103,11 @@ fun MonthlyStats(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Левая часть — круг с часами
             Box(
                 modifier = Modifier.size(80.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    // Сначала рисуем серый "фон"
                     drawArc(
                         color = Color.LightGray,
                         startAngle = -90f,
@@ -149,7 +116,6 @@ fun MonthlyStats(
                         style = Stroke(width = 16f, cap = StrokeCap.Round)
                     )
 
-                    // Затем поверх — прогресс
                     drawArc(
                         color = Color(0xFFFFC107),
                         startAngle = -90f,
@@ -159,7 +125,6 @@ fun MonthlyStats(
                     )
                 }
 
-                // Текст в центре
                 Text(
                     text = "$hours ч",
                     fontWeight = FontWeight.Bold,
@@ -167,7 +132,6 @@ fun MonthlyStats(
                 )
             }
 
-            // Правая часть — кружки с посещениями
             Column(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center,
