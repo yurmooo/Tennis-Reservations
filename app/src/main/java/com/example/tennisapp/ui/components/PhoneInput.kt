@@ -1,21 +1,18 @@
 package com.example.tennisapp.ui.components
 
-import com.google.i18n.phonenumbers.PhoneNumberUtil
-import com.google.i18n.phonenumbers.NumberParseException
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.example.tennisapp.roboto
 
 @Composable
@@ -24,48 +21,84 @@ fun PhoneInput(
     onPhoneChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        val formattedPhone = formatPhone(phone) ?: phone
-
-        AndroidView(
-            factory = { context ->
-                com.hbb20.CountryCodePicker(context).apply {
-                    setCountryForNameCode("RU")
-//                    setCcpClickable(false) //Запрет смены страны
-                }
-            },
-            modifier = Modifier
-                .padding(top = 15.dp)
-                .weight(0.35f)
-        )
-
-        OutlinedTextField(
-            value = formattedPhone,
-            onValueChange = { input ->
-                val digits = input.filter { it.isDigit() }
-                val trimmed = digits.take(11)
-                onPhoneChange(trimmed)
-            },
-            label = { Text("Номер телефона") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            textStyle = TextStyle(
-                fontFamily = roboto,
-                fontSize = 18.sp
-            ),
-            modifier = modifier
-        )
-    }
+    OutlinedTextField(
+        value = phone,
+        onValueChange = { input ->
+            val digits = input.filter { it.isDigit() }.take(10)
+            onPhoneChange(digits)
+        },
+        label = { Text("Номер телефона") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+        textStyle = TextStyle(
+            fontFamily = roboto,
+            fontSize = 18.sp
+        ),
+        visualTransformation = phoneVisualTransformation(),
+        modifier = modifier.fillMaxWidth()
+    )
 }
 
-fun formatPhone(phone: String): String? {
-    val phoneUtil = PhoneNumberUtil.getInstance()
-    return try {
-        val numberProto = phoneUtil.parse(phone, "RU")
-        if (phoneUtil.isValidNumber(numberProto)) {
-            phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL)
-        } else null
-    } catch (e: NumberParseException) {
-        null
+fun phoneVisualTransformation(): VisualTransformation {
+    return VisualTransformation { text ->
+        val digits = text.text.filter { it.isDigit() }
+
+        val out = StringBuilder("+7 ")
+        var digitIndex = 0
+
+        if (digits.isNotEmpty()) {
+            out.append("(")
+            val end = minOf(3, digits.length)
+            out.append(digits.substring(0, end))
+            digitIndex = end
+        }
+        if (digits.length > 3) {
+            out.append(") ")
+            val end = minOf(6, digits.length)
+            out.append(digits.substring(3, end))
+            digitIndex = end
+        }
+        if (digits.length > 6) {
+            out.append("-")
+            val end = minOf(8, digits.length)
+            out.append(digits.substring(6, end))
+            digitIndex = end
+        }
+        if (digits.length > 8) {
+            out.append("-")
+            val end = minOf(10, digits.length)
+            out.append(digits.substring(8, end))
+            digitIndex = end
+        }
+
+        val transformed = out.toString()
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                var transformedOffset = offset
+
+                if (offset >= 0) transformedOffset += 3
+                if (offset >= 1) transformedOffset += 1
+                if (offset >= 4) transformedOffset += 2
+                if (offset >= 7) transformedOffset += 1
+                if (offset >= 9) transformedOffset += 1
+
+                return transformedOffset.coerceAtMost(transformed.length)
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                var originalOffset = offset
+
+                if (originalOffset > 3) originalOffset -= 3
+                if (originalOffset > 4) originalOffset -= 1
+                if (originalOffset > 7) originalOffset -= 2
+                if (originalOffset > 11) originalOffset -= 1
+                if (originalOffset > 14) originalOffset -= 1
+
+                return originalOffset.coerceIn(0, digits.length)
+            }
+        }
+
+        TransformedText(AnnotatedString(transformed), offsetMapping)
     }
 }
