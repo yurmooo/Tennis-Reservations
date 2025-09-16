@@ -34,9 +34,9 @@ fun MainScreen() {
                         "notifications_screen" -> "Уведомления"
                         else -> "Tennis App"
                     },
-                    onNotificationsClick = {
-                        navController.navigate("notifications_screen")
-                    }
+                    showBackButton = currentDestination?.route == "notifications_screen",
+                    onBackClick = { navController.popBackStack() },
+                    onNotificationsClick = { navController.navigate("notifications_screen") }
                 )
             }
         },
