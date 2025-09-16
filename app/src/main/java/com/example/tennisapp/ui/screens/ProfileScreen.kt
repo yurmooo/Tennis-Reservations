@@ -115,7 +115,8 @@ fun ProfileContent(
                     UserDataStore.clearClientId(context)
                 }
                 navController.navigate("authorization_screen") {
-                    popUpTo("main_screen") { inclusive = true }
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
                 }
             }
         )
