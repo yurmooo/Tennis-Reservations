@@ -75,7 +75,7 @@ fun AuthorizationContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Добро пожаловать!",
+                        text = "Вход/Регистрация",
                         fontFamily = roboto,
                         style = MaterialTheme.typography.titleLarge
                     )
