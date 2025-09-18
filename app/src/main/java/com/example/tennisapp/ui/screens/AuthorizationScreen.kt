@@ -116,26 +116,13 @@ fun AuthorizationContent(
 
                     Button(
                         onClick = {
-                            val cleanedPhone = phone.filter { it.isDigit() } // отправляем только цифры
+                            val cleanedPhone = phone.filter { it.isDigit() }
                             if (cleanedPhone.length != 10 || password.isEmpty()) {
                                 errorMessage = "Введите корректный номер и пароль"
                                 return@Button
                             }
-
-                            AuthorizeUser(
-                                context = ctx,
-                                phone = cleanedPhone,
-                                password = password,
-                                onSuccess = { clientId ->
-                                    errorMessage = null
-                                    onAuthorizationClick(clientId.toString(), password)
-                                },
-                                onError = { msg ->
-                                    errorMessage = msg
-                                }
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                            onAuthorizationClick(cleanedPhone, password) // Просто передаем данные
+                        }
                     ) {
                         Text("Войти")
                     }
