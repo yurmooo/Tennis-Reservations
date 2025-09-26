@@ -1,6 +1,7 @@
 package com.example.tennisapp
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -39,6 +40,8 @@ import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.ui.screens.AuthorizationContent
 import com.example.tennisapp.ui.screens.MainScreen
 import androidx.lifecycle.lifecycleScope
+import com.example.tennisapp.database.AuthorizeUser
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 val roboto = FontFamily ( Font(R.font.roboto) )
@@ -48,13 +51,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
-            val clientId = UserDataStore.getClientId(this@MainActivity)
+            val clientId = UserDataStore.getClientId(this@MainActivity).firstOrNull()
             setContent {
                 if (clientId != null) {
                     MainScreen()
                 } else {
                     AuthorizationContent(
-                        onAuthorizationClick = { phone, password -> }
+                        onAuthorizationClick = { phone, password ->
+                            AuthorizeUser(
+                                context = this@MainActivity,
+                                phone = phone,
+                                password = password,
+                                onSuccess = { id ->
+                                    lifecycleScope.launch {
+                                        UserDataStore.saveClientId(this@MainActivity, id)
+                                    }
+                                    setContent { MainScreen() }
+                                },
+                                onError = { msg ->
+                                    Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
                     )
                 }
             }
