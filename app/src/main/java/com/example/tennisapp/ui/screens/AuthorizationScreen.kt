@@ -33,7 +33,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.tennisapp.R
-import com.example.tennisapp.database.AuthorizeUser
 import com.example.tennisapp.roboto
 import com.example.tennisapp.ui.components.PhoneInput
 

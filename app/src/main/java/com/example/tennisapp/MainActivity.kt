@@ -40,7 +40,7 @@ import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.ui.screens.AuthorizationContent
 import com.example.tennisapp.ui.screens.MainScreen
 import androidx.lifecycle.lifecycleScope
-import com.example.tennisapp.database.AuthorizeUser
+import com.example.tennisapp.database.authorizeUser
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     AuthorizationContent(
                         onAuthorizationClick = { phone, password ->
-                            AuthorizeUser(
+                            authorizeUser(
                                 context = this@MainActivity,
                                 phone = phone,
                                 password = password,

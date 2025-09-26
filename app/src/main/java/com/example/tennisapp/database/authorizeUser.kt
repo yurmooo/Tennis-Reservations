@@ -6,13 +6,9 @@ import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.example.tennisapp.data.UserDataStore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-fun AuthorizeUser(
+fun authorizeUser(
     context: Context,
     phone: String,
     password: String,

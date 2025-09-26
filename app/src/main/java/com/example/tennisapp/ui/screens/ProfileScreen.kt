@@ -21,6 +21,11 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,23 +33,48 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.tennisapp.data.UserDataStore
+import com.example.tennisapp.database.getUserProfile
 import com.example.tennisapp.ui.components.ProfileItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileContent(
     navController: NavController,
-    userName: String = "Иван Иванов",
-    email: String = "ivan@example.com",
-    phone: String = "+7 (999) 123-45-67",
     onLogoutClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
     onMyBookingsClick: () -> Unit = {},
     onThemeClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    var userName by remember { mutableStateOf("Загрузка...") }
+    var email by remember { mutableStateOf("Загрузка...") }
+    var phone by remember { mutableStateOf("Загрузка...") }
+
+    // Загружаем данные из БД при первом запуске
+    LaunchedEffect(Unit) {
+        val clientId = UserDataStore.getClientId(context)
+            .firstOrNull() // берем сохранённый id
+
+        if (clientId != null) {
+            getUserProfile(
+                context = context,
+                clientId = clientId,
+                onSuccess = { user ->
+                    userName = user.name ?: "Без имени"
+                    email = user.email ?: "Нет email"
+                    phone = user.phone
+                },
+                onError = {
+                    userName = "Ошибка"
+                    email = "Ошибка"
+                    phone = "Ошибка"
+                }
+            )
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -73,37 +103,14 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        ProfileItem(
-            icon = Icons.Default.Person,
-            text = userName,
-            onClick = onEditClick
-        )
-
-        ProfileItem(
-            icon = Icons.Default.Email,
-            text = email,
-            onClick = onEditClick
-        )
-
-        ProfileItem(
-            icon = Icons.Default.Phone,
-            text = phone,
-            onClick = onEditClick
-        )
+        ProfileItem(icon = Icons.Default.Person, text = userName, onClick = onEditClick)
+        ProfileItem(icon = Icons.Default.Email, text = email, onClick = onEditClick)
+        ProfileItem(icon = Icons.Default.Phone, text = phone, onClick = onEditClick)
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        ProfileItem(
-            text = "Мои брони",
-            icon = Icons.Default.List,
-            onClick = onMyBookingsClick,
-        )
-
-        ProfileItem(
-            text = "Тема",
-            icon = Icons.Default.Settings,
-            onClick = onThemeClick
-        )
+        ProfileItem(text = "Мои брони", icon = Icons.Default.List, onClick = onMyBookingsClick)
+        ProfileItem(text = "Тема", icon = Icons.Default.Settings, onClick = onThemeClick)
 
         Spacer(modifier = Modifier.weight(1f))
 

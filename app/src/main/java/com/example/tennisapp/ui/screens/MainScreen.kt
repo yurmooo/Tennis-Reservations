@@ -13,7 +13,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.tennisapp.ui.components.AppBar
 import com.example.tennisapp.MainContent
-import com.example.tennisapp.database.AuthorizeUser
+import com.example.tennisapp.database.authorizeUser
 import com.example.tennisapp.ui.components.BottomBar
 
 @Composable
@@ -75,7 +75,7 @@ fun MainScreen() {
                 val context = LocalContext.current
 
                 AuthorizationContent { phone, password ->
-                    AuthorizeUser(
+                    authorizeUser(
                         context = context,
                         phone = phone,
                         password = password,
