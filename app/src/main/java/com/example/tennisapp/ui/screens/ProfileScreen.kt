@@ -53,10 +53,9 @@ fun ProfileContent(
     var email by remember { mutableStateOf("Загрузка...") }
     var phone by remember { mutableStateOf("Загрузка...") }
 
-    // Загружаем данные из БД при первом запуске
     LaunchedEffect(Unit) {
         val clientId = UserDataStore.getClientId(context)
-            .firstOrNull() // берем сохранённый id
+            .firstOrNull()
 
         if (clientId != null) {
             getUserProfile(

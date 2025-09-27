@@ -23,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,8 +41,8 @@ import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.ui.screens.AuthorizationContent
 import com.example.tennisapp.ui.screens.MainScreen
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.runtime.getValue
 import com.example.tennisapp.database.authorizeUser
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 val roboto = FontFamily ( Font(R.font.roboto) )
@@ -50,29 +51,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        lifecycleScope.launch {
-            val clientId = UserDataStore.getClientId(this@MainActivity).firstOrNull()
-            setContent {
-                if (clientId != null) {
-                    MainScreen()
-                } else {
-                    AuthorizationContent(
-                        onAuthorizationClick = { phone, password ->
-                            authorizeUser(
-                                context = this@MainActivity,
-                                phone = phone,
-                                password = password,
-                                onSuccess = { id ->
-                                    lifecycleScope.launch {
-                                        UserDataStore.saveClientId(this@MainActivity, id)
-                                    }
-                                    setContent { MainScreen() }
-                                },
-                                onError = { msg ->
-                                    Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
+        setContent {
+            val clientId by UserDataStore.getClientId(this@MainActivity)
+                .collectAsState(initial = null)
+
+            if (clientId != null) {
+                MainScreen()
+            } else {
+                AuthorizationContent { phone, password ->
+                    authorizeUser(
+                        context = this,
+                        phone = phone,
+                        password = password,
+                        onSuccess = { id ->
+                            lifecycleScope.launch {
+                                UserDataStore.saveClientId(this@MainActivity, id)
+                            }
+                        },
+                        onError = { /* обработка ошибки */ }
                     )
                 }
             }
