@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.database.getUserProfile
+import com.example.tennisapp.ui.components.InputField
 import com.example.tennisapp.ui.components.ProfileItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,8 +63,8 @@ fun ProfileContent(
                 context = context,
                 clientId = clientId,
                 onSuccess = { user ->
-                    userName = user.name ?: "Без имени"
-                    email = user.email ?: "Нет email"
+                    userName = user.name ?: "Введите Имя"
+                    email = user.email ?: "Введите Email"
                     phone = user.phone
                 },
                 onError = {
@@ -102,9 +103,9 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        ProfileItem(icon = Icons.Default.Person, text = userName, onClick = onEditClick)
-        ProfileItem(icon = Icons.Default.Email, text = email, onClick = onEditClick)
-        ProfileItem(icon = Icons.Default.Phone, text = phone, onClick = onEditClick)
+        InputField(icon = Icons.Default.Person, value = userName, label = "Имя", onValueChange = { userName = it })
+        InputField(icon = Icons.Default.Email, value = email, label = "Email", onValueChange = { email = it })
+        InputField(icon = Icons.Default.Phone, value = phone, label = "Телефон", onValueChange = { phone = it })
 
         Spacer(modifier = Modifier.height(12.dp))
 
