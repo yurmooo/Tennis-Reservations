@@ -1,7 +1,11 @@
 package com.example.tennisapp.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -12,9 +16,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.tennisapp.ui.components.AppBar
-import com.example.tennisapp.MainContent
 import com.example.tennisapp.database.authorizeUser
 import com.example.tennisapp.ui.components.BottomBar
+import com.example.tennisapp.ui.components.CarouselSlider
+import com.example.tennisapp.ui.components.MonthlyStats
 
 @Composable
 fun MainScreen() {
@@ -91,5 +96,29 @@ fun MainScreen() {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MainContent() {
+    val images = listOf(
+        "https://i.pinimg.com/736x/6d/c9/ae/6dc9ae126aa64a4d0522954f1f69bf32.jpg",
+        "https://static.onlinetrade.ru/img/items/b/raketka_krafla_kid21_dlya_tennisa_1762371_1.jpg",
+        "https://img.freepik.com/photos-premium/raquette-tennis-fond-rose_51524-13927.jpg"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        CarouselSlider(images = images)
+
+        MonthlyStats(
+            hours = 12,
+            maxHours = 50,
+            visits = 7,
+            maxVisits = 9
+        )
     }
 }

@@ -5,8 +5,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.tennisapp.MainContent
 import com.example.tennisapp.ui.screens.BookingContent
+import com.example.tennisapp.ui.screens.MainContent
 import com.example.tennisapp.ui.screens.NotificationsContent
 import com.example.tennisapp.ui.screens.ProfileContent
 import com.example.tennisapp.ui.screens.SplashScreen

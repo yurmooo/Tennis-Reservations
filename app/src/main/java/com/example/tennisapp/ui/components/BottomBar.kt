@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.example.tennisapp.BottomNavItem
+import com.example.tennisapp.data.BottomNavItem
 import com.example.tennisapp.roboto
 
 @Composable

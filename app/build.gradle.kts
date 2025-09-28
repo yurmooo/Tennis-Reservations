@@ -58,6 +58,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:1.6.2")
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation("androidx.compose.material:material:1.6.2")
+    implementation("io.coil-kt:coil-compose:2.4.0")
     implementation(libs.androidx.ui.text.google.fonts)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
