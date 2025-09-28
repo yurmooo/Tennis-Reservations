@@ -61,13 +61,12 @@ fun ProfileContent(
     var clientId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(Unit) {
-        val clientId = UserDataStore.getClientId(context)
-            .firstOrNull()
+        clientId = UserDataStore.getClientId(context).firstOrNull()
 
-        if (clientId != null) {
+        clientId?.let {
             getUserProfile(
                 context = context,
-                clientId = clientId,
+                clientId = it,
                 onSuccess = { user ->
                     userName = user.name ?: ""
                     email = user.email ?: ""

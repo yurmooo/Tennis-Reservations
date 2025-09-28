@@ -38,7 +38,6 @@ fun InputField(
         label = {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyLarge,
                 fontFamily = roboto
             )
         },
@@ -68,7 +67,9 @@ fun InputField(
                     onSave(value)
                 }
             },
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Done
+        ),
         keyboardActions = KeyboardActions(onDone = {
                 onSave(value)
                 focusManager.clearFocus()
