@@ -2,16 +2,17 @@ package com.example.tennisapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.navigation.NavController
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExitToApp
@@ -20,6 +21,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,19 +44,21 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import com.example.tennisapp.database.updateUserProfile
+import com.example.tennisapp.roboto
 
 @Composable
 fun ProfileContent(
     navController: NavController,
-    onLogoutClick: () -> Unit = {},
-    onEditClick: () -> Unit = {},
     onMyBookingsClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
     onThemeClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var userName by remember { mutableStateOf("Загрузка...") }
     var email by remember { mutableStateOf("Загрузка...") }
     var phone by remember { mutableStateOf("Загрузка...") }
+    var clientId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(Unit) {
         val clientId = UserDataStore.getClientId(context)
@@ -63,8 +69,8 @@ fun ProfileContent(
                 context = context,
                 clientId = clientId,
                 onSuccess = { user ->
-                    userName = user.name ?: "Введите Имя"
-                    email = user.email ?: "Введите Email"
+                    userName = user.name ?: ""
+                    email = user.email ?: ""
                     phone = user.phone
                 },
                 onError = {
@@ -88,8 +94,7 @@ fun ProfileContent(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF4CAF50))
-                    .clickable { onEditClick() },
+                    .background(Color(0xFF4CAF50)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -103,9 +108,35 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        InputField(icon = Icons.Default.Person, value = userName, label = "Имя", onValueChange = { userName = it })
-        InputField(icon = Icons.Default.Email, value = email, label = "Email", onValueChange = { email = it })
-        InputField(icon = Icons.Default.Phone, value = phone, label = "Телефон", onValueChange = { phone = it })
+        InputField(
+            icon = Icons.Default.Person,
+            value = userName,
+            label = "Имя",
+            onValueChange = { userName = it },
+            onSave = { value ->
+                clientId?.let {
+                    updateUserProfile(context, it, value, email, { user ->
+                        userName = user.name ?: ""
+                    }, { })
+                }
+            }
+        )
+
+        InputField(
+            icon = Icons.Default.Email,
+            value = email,
+            label = "Email",
+            onValueChange = { email = it },
+            onSave = { value ->
+                clientId?.let {
+                    updateUserProfile(context, it, userName, value, { user ->
+                        email = user.email ?: ""
+                    }, { })
+                }
+            }
+        )
+
+        ProfileItem(icon = Icons.Default.Phone, text = phone, onClick = onEditClick)
 
         Spacer(modifier = Modifier.height(12.dp))
 
