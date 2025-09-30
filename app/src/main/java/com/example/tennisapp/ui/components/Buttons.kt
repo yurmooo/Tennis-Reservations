@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -19,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.tennisapp.roboto
 
 @Composable
@@ -45,5 +48,24 @@ fun ProfileItem(icon: ImageVector, text: String, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Text(text, style = MaterialTheme.typography.bodyLarge, fontFamily = roboto)
         }
+    }
+}
+
+@Composable
+fun BookingButton(navController: NavController) {
+    Button(
+        onClick = { navController.navigate("booking_screen") },
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Text(
+            text = "Перейти к бронированию",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.White
+        )
     }
 }

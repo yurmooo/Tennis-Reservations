@@ -2,15 +2,23 @@ package com.example.tennisapp.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -20,6 +28,10 @@ import com.example.tennisapp.database.authorizeUser
 import com.example.tennisapp.ui.components.BottomBar
 import com.example.tennisapp.ui.components.CarouselSlider
 import com.example.tennisapp.ui.components.MonthlyStats
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.navigation.NavController
+import com.example.tennisapp.ui.components.BookingButton
 
 @Composable
 fun MainScreen() {
@@ -65,7 +77,7 @@ fun MainScreen() {
                 SplashScreen(navController = navController)
             }
             composable ("main_screen") {
-                MainContent()
+                MainContent(navController = navController)
             }
             composable ("booking_screen") {
                 BookingContent()
@@ -100,7 +112,7 @@ fun MainScreen() {
 }
 
 @Composable
-fun MainContent() {
+fun MainContent(navController: NavController) {
     val images = listOf(
         "https://i.pinimg.com/736x/6d/c9/ae/6dc9ae126aa64a4d0522954f1f69bf32.jpg",
         "https://static.onlinetrade.ru/img/items/b/raketka_krafla_kid21_dlya_tennisa_1762371_1.jpg",
@@ -114,11 +126,8 @@ fun MainContent() {
     ) {
         CarouselSlider(images = images)
 
-        MonthlyStats(
-            hours = 12,
-            maxHours = 50,
-            visits = 7,
-            maxVisits = 9
-        )
+        MonthlyStats(hours = 12, maxHours = 50, visits = 7, maxVisits = 9)
+
+        BookingButton(navController)
     }
 }
