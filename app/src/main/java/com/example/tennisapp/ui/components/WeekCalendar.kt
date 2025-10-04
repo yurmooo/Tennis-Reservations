@@ -1,8 +1,7 @@
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class)
 
 package com.example.tennisapp.ui.components
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -13,10 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tennisapp.R
 import com.example.tennisapp.roboto
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,7 +33,8 @@ fun PagerWeekCalendar(
     modifier: Modifier = Modifier,
     onDateSelected: (Date) -> Unit = {}
 ) {
-    var currentWeekOffset by remember { mutableStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
+
     val today = remember { Calendar.getInstance().time }
     var selectedDate by remember { mutableStateOf(today) }
 
@@ -47,16 +45,13 @@ fun PagerWeekCalendar(
         pageCount = { totalWeeksInMonth }
     )
 
-    LaunchedEffect(pagerState.currentPage) {
-        currentWeekOffset = pagerState.currentPage
-    }
+    val currentWeekOffset = pagerState.currentPage
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        // Верхняя панель
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -64,8 +59,9 @@ fun PagerWeekCalendar(
         ) {
             IconButton(
                 onClick = {
-                    if (pagerState.currentPage > 0) {
-                        currentWeekOffset--
+                    coroutineScope.launch {
+                        if (pagerState.currentPage > 0)
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
                     }
                 },
                 enabled = pagerState.currentPage > 0
@@ -89,8 +85,9 @@ fun PagerWeekCalendar(
 
             IconButton(
                 onClick = {
-                    if (pagerState.currentPage < totalWeeksInMonth - 1) {
-                        currentWeekOffset++
+                    coroutineScope.launch {
+                        if (pagerState.currentPage < totalWeeksInMonth - 1)
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     }
                 },
                 enabled = pagerState.currentPage < totalWeeksInMonth - 1
@@ -106,29 +103,29 @@ fun PagerWeekCalendar(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Календарь по неделям
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth()
         ) { page ->
-            val weekOffset = page
-            val dates = getDatesForWeek(weekOffset)
+            val weekDates = getDatesForWeek(page)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                dates.forEach { date ->
+                weekDates.forEach { date ->
                     val day = SimpleDateFormat("EE", Locale("ru")).format(date).uppercase()
                     val dayNumber = SimpleDateFormat("d", Locale.getDefault()).format(date)
-                    val isSelected = date == selectedDate
+
+                    val isSameDay = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(date) ==
+                            SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(selectedDate)
                     val isToday = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(date) ==
                             SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(today)
 
                     SmoothDayItem(
                         day = day,
                         dayNumber = dayNumber,
-                        isSelected = isSelected,
+                        isSelected = isSameDay,
                         isToday = isToday,
                         onClick = {
                             selectedDate = date
@@ -197,7 +194,6 @@ fun SmoothDayItem(
     }
 }
 
-// --- Вспомогательные функции ---
 fun getDatesForWeek(offset: Int): List<Date> {
     val cal = Calendar.getInstance()
     cal.set(Calendar.DAY_OF_MONTH, 1)
