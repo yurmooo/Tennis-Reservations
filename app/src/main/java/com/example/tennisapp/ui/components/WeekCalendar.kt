@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalAnimationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 
 package com.example.tennisapp.ui.components
 
@@ -13,7 +13,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,30 +31,24 @@ import com.example.tennisapp.roboto
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PagerWeekCalendar(
     modifier: Modifier = Modifier,
     onDateSelected: (Date) -> Unit = {}
 ) {
     var currentWeekOffset by remember { mutableStateOf(0) }
-    val today = remember { getToday() }
+    val today = remember { Calendar.getInstance().time }
     var selectedDate by remember { mutableStateOf(today) }
 
+    val totalWeeksInMonth = remember { getWeeksInCurrentMonth() }
+
     val pagerState = rememberPagerState(
-        pageCount = { Int.MAX_VALUE },
-        initialPage = Int.MAX_VALUE / 2
+        initialPage = 0,
+        pageCount = { totalWeeksInMonth }
     )
 
     LaunchedEffect(pagerState.currentPage) {
-        currentWeekOffset = pagerState.currentPage - (Int.MAX_VALUE / 2)
-    }
-
-    LaunchedEffect(currentWeekOffset) {
-        val targetPage = currentWeekOffset + (Int.MAX_VALUE / 2)
-        if (pagerState.currentPage != targetPage) {
-            pagerState.animateScrollToPage(targetPage)
-        }
+        currentWeekOffset = pagerState.currentPage
     }
 
     Column(
@@ -59,6 +56,7 @@ fun PagerWeekCalendar(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
+        // Верхняя панель
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -66,16 +64,16 @@ fun PagerWeekCalendar(
         ) {
             IconButton(
                 onClick = {
-                    if (currentWeekOffset > 0) {
+                    if (pagerState.currentPage > 0) {
                         currentWeekOffset--
                     }
                 },
-                enabled = currentWeekOffset > 0
+                enabled = pagerState.currentPage > 0
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_arrow_left),
                     contentDescription = "Предыдущая неделя",
-                    tint = if (currentWeekOffset > 0) Color(0xFF4CAF50) else Color(0xFFBDBDBD)
+                    tint = if (pagerState.currentPage > 0) Color(0xFF4CAF50) else Color(0xFFBDBDBD)
                 )
             }
 
@@ -91,26 +89,29 @@ fun PagerWeekCalendar(
 
             IconButton(
                 onClick = {
-                    if (!isLastWeekOfMonth(currentWeekOffset)) {
+                    if (pagerState.currentPage < totalWeeksInMonth - 1) {
                         currentWeekOffset++
                     }
-                }
+                },
+                enabled = pagerState.currentPage < totalWeeksInMonth - 1
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_arrow_right),
                     contentDescription = "Следующая неделя",
-                    tint = if (!isLastWeekOfMonth(currentWeekOffset)) Color(0xFF4CAF50) else Color(0xFFBDBDBD)
+                    tint = if (pagerState.currentPage < totalWeeksInMonth - 1)
+                        Color(0xFF4CAF50) else Color(0xFFBDBDBD)
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Календарь по неделям
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth()
         ) { page ->
-            val weekOffset = page - (Int.MAX_VALUE / 2)
+            val weekOffset = page
             val dates = getDatesForWeek(weekOffset)
 
             Row(
@@ -154,7 +155,7 @@ fun SmoothDayItem(
             isToday -> Color(0x224CAF50)
             else -> Color.Transparent
         },
-        animationSpec = tween(durationMillis = 300)
+        animationSpec = tween(durationMillis = 250)
     )
 
     val textColor by animateColorAsState(
@@ -163,13 +164,13 @@ fun SmoothDayItem(
             isToday -> Color(0xFF4CAF50)
             else -> Color(0xFF333333)
         },
-        animationSpec = tween(durationMillis = 300)
+        animationSpec = tween(durationMillis = 250)
     )
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(48.dp)
+            .size(46.dp)
             .clip(CircleShape)
             .background(bgColor)
             .clickable(
@@ -178,15 +179,12 @@ fun SmoothDayItem(
                 onClick = onClick
             )
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = day.take(2),
                 color = textColor,
                 fontSize = 10.sp,
-                fontFamily = roboto,
-                maxLines = 1
+                fontFamily = roboto
             )
             Text(
                 text = dayNumber,
@@ -199,8 +197,10 @@ fun SmoothDayItem(
     }
 }
 
+// --- Вспомогательные функции ---
 fun getDatesForWeek(offset: Int): List<Date> {
     val cal = Calendar.getInstance()
+    cal.set(Calendar.DAY_OF_MONTH, 1)
     cal.add(Calendar.WEEK_OF_YEAR, offset)
     cal.set(Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
     return (0 until 7).map {
@@ -208,12 +208,10 @@ fun getDatesForWeek(offset: Int): List<Date> {
     }
 }
 
-fun getToday(): Date = Calendar.getInstance().time
-
-fun isLastWeekOfMonth(offset: Int): Boolean {
+fun getWeeksInCurrentMonth(): Int {
     val cal = Calendar.getInstance()
-    cal.add(Calendar.WEEK_OF_YEAR, offset)
-    val currentMonth = cal.get(Calendar.MONTH)
-    cal.add(Calendar.WEEK_OF_YEAR, 1)
-    return cal.get(Calendar.MONTH) != currentMonth
+    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    return (maxDay / 7.0).let {
+        if (maxDay % 7 == 0) it.toInt() else it.toInt() + 1
+    }
 }
