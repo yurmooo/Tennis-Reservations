@@ -20,7 +20,7 @@ fun AppNavHost (navController: NavHostController, modifier: Modifier = Modifier)
     ) {
         composable("splash_screen") { SplashScreen(navController) }
         composable("main_screen") { MainContent(navController) }
-        composable("booking_screen") { BookingContent() }
+        composable("booking_screen") { BookingContent(navController = navController) }
         composable("profile_screen") { ProfileContent(navController = navController) }
         composable("notifications_screen") { NotificationsContent() }
     }

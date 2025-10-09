@@ -80,7 +80,23 @@ fun MainScreen() {
                 MainContent(navController = navController)
             }
             composable ("booking_screen") {
-                BookingContent()
+                BookingContent(navController = navController)
+            }
+            composable ("summary_screen/{sport}/{coach}/{date}/{time}/{options}") { backStackEntry ->
+                val sport = backStackEntry.arguments?.getString("sport") ?: ""
+                val coach = backStackEntry.arguments?.getString("coach")
+                val date = backStackEntry.arguments?.getString("date")
+                val time = backStackEntry.arguments?.getString("time")
+                val options = backStackEntry.arguments?.getString("options")?.split(";")?.toSet() ?: emptySet()
+
+                BookingSummaryScreen(
+                    sport = sport,
+                    coach = coach,
+                    date = date,
+                    time = time,
+                    options = options,
+                    onConfirm = { navController.popBackStack("main_screen", inclusive = false) },
+                    onCancel = { navController.popBackStack() } )
             }
             composable ("profile_screen") {
                 ProfileContent(navController = navController)
