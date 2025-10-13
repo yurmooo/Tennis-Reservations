@@ -17,6 +17,8 @@ fun AppBar(
     title: String = "Tennis App",
     onNotificationsClick: () -> Unit = {},
     showBackButton: Boolean = false,
+    showMarkReadButton: Boolean = false,
+    onMarkRead: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     CenterAlignedTopAppBar(
@@ -34,12 +36,22 @@ fun AppBar(
             }
         },
         actions = {
-            if (!showBackButton){
-                IconButton(onClick = onNotificationsClick) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Уведомления"
-                    )
+            when {
+                showMarkReadButton -> {
+                    IconButton(onClick = onMarkRead) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Отметить как прочитанные"
+                        )
+                    }
+                }
+                !showBackButton -> {
+                    IconButton(onClick = onNotificationsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Уведомления"
+                        )
+                    }
                 }
             }
         }

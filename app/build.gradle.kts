@@ -49,6 +49,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.3")
     implementation ("com.android.volley:volley:1.2.1")
     implementation ("com.googlecode.libphonenumber:libphonenumber:8.13.14")
     implementation("androidx.datastore:datastore-preferences:1.1.7")

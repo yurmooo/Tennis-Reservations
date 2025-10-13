@@ -2,6 +2,8 @@
 
 package com.example.tennisapp.ui.screens
 
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -34,11 +36,16 @@ import com.example.tennisapp.R
 import com.example.tennisapp.roboto
 import com.example.tennisapp.ui.components.PagerWeekCalendar
 import kotlinx.coroutines.launch
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun BookingContent(navController: NavController) {
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var selectedSport by remember { mutableStateOf<String?>(null) }
     var selectedCoach by remember { mutableStateOf<String?>(null) }
@@ -148,11 +155,25 @@ fun BookingContent(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+
             Button(
                 onClick = {
-                    navController.navigate(
-                    "summary_screen/${selectedSport ?: ""}/${selectedCoach ?: ""}/${selectedDate ?: ""}/${selectedTime ?: ""}/${selectedOptions.joinToString(";")}"
-                    )
+                    if (selectedSport != null && selectedDate != null && selectedTime != null) {
+                        val route = "summary_screen/" +
+                                "${Uri.encode(selectedSport)}/" +
+                                "${Uri.encode(selectedCoach ?: "Без тренера")}/" +
+                                "${Uri.encode(selectedDate)}/" +
+                                "${Uri.encode(selectedTime)}/" +
+                                "${Uri.encode(selectedOptions.joinToString(";"))}"
+
+                        navController.navigate(route)
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Заполните все обязательные поля: вид спорта, дата и время",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                 shape = RoundedCornerShape(12.dp),

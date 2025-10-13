@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.tennisapp.roboto
+import com.example.tennisapp.utils.NotificationHelper
+import com.example.tennisapp.ui.screens.NotificationsViewModel
 
 @Composable
 fun BookingSummaryScreen(
@@ -27,6 +29,7 @@ fun BookingSummaryScreen(
     date: String?,
     time: String?,
     options: Set<String>,
+    notificationsViewModel: NotificationsViewModel,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -106,11 +109,17 @@ fun BookingSummaryScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedButton(
-            onClick = { onConfirm() },
+        Button(
+            onClick = {
+                val message = "Вы забронировали $sport на ${date ?: ""} в ${time ?: ""}"
+                NotificationHelper.showBookingNotification(context, "Бронирование подтверждено", message)
+                notificationsViewModel.addNotification("Бронирование подтверждено", message)
+                onConfirm()
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Подтвердить бронирование", fontFamily = roboto)
+            Text("Подтвердить бронирование", color = Color.White, fontFamily = roboto)
         }
 
         TextButton(

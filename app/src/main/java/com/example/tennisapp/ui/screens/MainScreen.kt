@@ -1,5 +1,8 @@
 package com.example.tennisapp.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +33,9 @@ import com.example.tennisapp.ui.components.CarouselSlider
 import com.example.tennisapp.ui.components.MonthlyStats
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.tennisapp.ui.components.BookingButton
 
@@ -38,6 +44,7 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val notificationsViewModel: NotificationsViewModel = viewModel()
 
     Scaffold (
         topBar = {
@@ -53,7 +60,9 @@ fun MainScreen() {
                     },
                     showBackButton = currentDestination?.route == "notifications_screen",
                     onBackClick = { navController.popBackStack() },
-                    onNotificationsClick = { navController.navigate("notifications_screen") }
+                    onNotificationsClick = { navController.navigate("notifications_screen") },
+                    showMarkReadButton = currentDestination?.route == "notifications_screen",
+                    onMarkRead = { notificationsViewModel.markAllAsRead() }
                 )
             }
         },
@@ -89,12 +98,15 @@ fun MainScreen() {
                 val time = backStackEntry.arguments?.getString("time")
                 val options = backStackEntry.arguments?.getString("options")?.split(";")?.toSet() ?: emptySet()
 
+                val notificationsViewModel: NotificationsViewModel = viewModel()
+
                 BookingSummaryScreen(
                     sport = sport,
                     coach = coach,
                     date = date,
                     time = time,
                     options = options,
+                    notificationsViewModel = notificationsViewModel,
                     onConfirm = { navController.popBackStack("main_screen", inclusive = false) },
                     onCancel = { navController.popBackStack() } )
             }
@@ -102,7 +114,7 @@ fun MainScreen() {
                 ProfileContent(navController = navController)
             }
             composable ("notifications_screen"){
-                NotificationsContent()
+                NotificationsContent(viewModel = notificationsViewModel)
             }
             composable("authorization_screen") {
                 val context = LocalContext.current
