@@ -196,18 +196,13 @@ fun SmoothDayItem(
 
 fun getDatesForWeek(offset: Int): List<Date> {
     val cal = Calendar.getInstance()
-    cal.set(Calendar.DAY_OF_MONTH, 1)
-    cal.add(Calendar.WEEK_OF_YEAR, offset)
     cal.set(Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
+    cal.add(Calendar.WEEK_OF_YEAR, offset)
     return (0 until 7).map {
         cal.time.also { cal.add(Calendar.DAY_OF_YEAR, 1) }
     }
 }
 
 fun getWeeksInCurrentMonth(): Int {
-    val cal = Calendar.getInstance()
-    val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-    return (maxDay / 7.0).let {
-        if (maxDay % 7 == 0) it.toInt() else it.toInt() + 1
-    }
+    return 5
 }

@@ -2,12 +2,15 @@ package com.example.tennisapp.ui.screens
 
 import android.content.Intent
 import android.provider.CalendarContract
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,6 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.tennisapp.data.Trainer
+import com.example.tennisapp.data.UserDataStore
+import com.example.tennisapp.database.createBooking
 import com.example.tennisapp.roboto
 import com.example.tennisapp.utils.NotificationHelper
 import com.example.tennisapp.ui.screens.NotificationsViewModel
@@ -40,6 +46,8 @@ fun BookingSummaryScreen(
     val coachPrice = if (coach != null && coach != "Без тренера") 800 else 0
     val optionsPrice = options.size * 200
     val totalPrice = basePrice + coachPrice + optionsPrice
+    val clientId by UserDataStore.getClientId(context).collectAsState(initial = null)
+    var selectedTrainer: Trainer? = null
 
     BackHandler {
         showExitDialog = true
@@ -115,6 +123,20 @@ fun BookingSummaryScreen(
                 NotificationHelper.showBookingNotification(context, "Бронирование подтверждено", message)
                 notificationsViewModel.addNotification("Бронирование подтверждено", message)
                 onConfirm()
+                createBooking(
+                    context,
+                    clientId = clientId ?: 0,
+                    trainerId = selectedTrainer?.id,
+                    sport = sport,
+                    bookingTime = "${date ?: ""} ${time ?: ""}",
+                    onSuccess = {
+                        Toast.makeText(context, "Бронирование создано", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { errorMsg ->
+                        Toast.makeText(context, "Ошибка: $errorMsg", Toast.LENGTH_SHORT).show()
+                        Log.e("BookingError", errorMsg)
+                    }
+                )
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
             modifier = Modifier.fillMaxWidth()

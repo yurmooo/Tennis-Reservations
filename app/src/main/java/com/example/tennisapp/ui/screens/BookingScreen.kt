@@ -13,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
+import coil.compose.AsyncImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.ui.platform.LocalContext
+import com.example.tennisapp.data.Trainer
+import com.example.tennisapp.data.UserDataStore
+import com.example.tennisapp.database.createBooking
+import com.example.tennisapp.database.getTrainers
 
 @Composable
 fun BookingContent(navController: NavController) {
@@ -53,6 +58,34 @@ fun BookingContent(navController: NavController) {
     var selectedTime by remember { mutableStateOf<String?>(null) }
     var selectedOptions by remember { mutableStateOf(setOf<String>()) }
     var currentStep by remember { mutableStateOf(1) }
+    var trainers by remember { mutableStateOf<List<Trainer>>(emptyList()) }
+    val clientId by UserDataStore.getClientId(context).collectAsState(initial = null)
+
+    LaunchedEffect(Unit) {
+        getTrainers(context,
+            onSuccess = { trainersList ->
+                // Добавляем вариант "Без тренера"
+                trainers = trainersList + Trainer(
+                    id = 0,
+                    name = "Без тренера",
+                    specialization = "Самостоятельная тренировка",
+                    photoUrl = null
+                )
+            },
+            onError = { error ->
+                Toast.makeText(context, "Ошибка: $error", Toast.LENGTH_SHORT).show()
+                // На случай ошибки — хотя бы "Без тренера"
+                trainers = listOf(
+                    Trainer(
+                        id = 0,
+                        name = "Без тренера",
+                        specialization = "Самостоятельная тренировка",
+                        photoUrl = null
+                    )
+                )
+            }
+        )
+    }
 
     LaunchedEffect(currentStep) {
         snapshotFlow { scrollState.maxValue }.collect { max ->
@@ -87,23 +120,14 @@ fun BookingContent(navController: NavController) {
             Text("Выберите тренера", style = MaterialTheme.typography.titleMedium.copy(fontFamily = roboto))
             Spacer(modifier = Modifier.height(8.dp))
 
-            val coaches = listOf(
-                Coach("Алексей", "Мастер спорта, 8 лет опыта", R.drawable.ic_arrow_right),
-                Coach("Мария", "Бывшая чемпионка России", R.drawable.ic_arrow_right),
-                Coach("Иван", "Профессиональный игрок, 10 лет стажа", R.drawable.ic_arrow_right),
-                Coach("Без тренера", "Самостоятельная тренировка", R.drawable.ic_arrow_right)
-            )
-
-            coaches.forEach { coach ->
-                CoachCard(
-                    coach = coach,
-                    isSelected = selectedCoach == coach.name,
+            trainers.forEach { trainer ->
+                TrainerCard(
+                    trainer = trainer,
+                    isSelected = selectedCoach == trainer.name,
                     onClick = {
-                        selectedCoach = coach.name
+                        selectedCoach = trainer.name
                         currentStep = 3
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo(scrollState.maxValue)
-                        }
+                        coroutineScope.launch { scrollState.animateScrollTo(scrollState.maxValue) }
                     }
                 )
             }
@@ -270,14 +294,8 @@ fun SportTab(text: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-data class Coach(
-    val name: String,
-    val description: String,
-    val imageRes: Int
-)
-
 @Composable
-fun CoachCard(coach: Coach, isSelected: Boolean, onClick: () -> Unit) {
+fun TrainerCard(trainer: Trainer, isSelected: Boolean, onClick: () -> Unit) {
     val borderColor by animateColorAsState(
         targetValue = if (isSelected) Color(0xFF4CAF50) else Color(0xFFE0E0E0),
         animationSpec = tween(250),
@@ -290,21 +308,16 @@ fun CoachCard(coach: Coach, isSelected: Boolean, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onClick() }
-            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .clickable { onClick() }
+            .padding(vertical = 4.dp)
     ) {
         Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = coach.imageRes),
-                contentDescription = coach.name,
+            AsyncImage(
+                model = trainer.photoUrl ?: R.drawable.ic_person_placeholder,
+                contentDescription = trainer.name,
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
@@ -315,7 +328,7 @@ fun CoachCard(coach: Coach, isSelected: Boolean, onClick: () -> Unit) {
 
             Column {
                 Text(
-                    text = coach.name,
+                    text = trainer.name,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontFamily = roboto,
                         fontWeight = FontWeight.Bold,
@@ -323,7 +336,7 @@ fun CoachCard(coach: Coach, isSelected: Boolean, onClick: () -> Unit) {
                     )
                 )
                 Text(
-                    text = coach.description,
+                    text = trainer.specialization ?: "",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontFamily = roboto,
                         color = Color.Gray
