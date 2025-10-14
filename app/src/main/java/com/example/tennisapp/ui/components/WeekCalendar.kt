@@ -31,12 +31,12 @@ import java.util.*
 @Composable
 fun PagerWeekCalendar(
     modifier: Modifier = Modifier,
+    selectedDate: Date,
     onDateSelected: (Date) -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
 
     val today = remember { Calendar.getInstance().time }
-    var selectedDate by remember { mutableStateOf(today) }
 
     val totalWeeksInMonth = remember { getWeeksInCurrentMonth() }
 
@@ -127,10 +127,7 @@ fun PagerWeekCalendar(
                         dayNumber = dayNumber,
                         isSelected = isSameDay,
                         isToday = isToday,
-                        onClick = {
-                            selectedDate = date
-                            onDateSelected(date)
-                        }
+                        onClick = { onDateSelected(date) }
                     )
                 }
             }

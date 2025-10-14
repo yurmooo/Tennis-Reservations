@@ -2,6 +2,7 @@
 
 package com.example.tennisapp.ui.screens
 
+import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -45,6 +46,9 @@ import com.example.tennisapp.data.Trainer
 import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.database.createBooking
 import com.example.tennisapp.database.getTrainers
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun BookingContent(navController: NavController) {
@@ -54,12 +58,17 @@ fun BookingContent(navController: NavController) {
 
     var selectedSport by remember { mutableStateOf<String?>(null) }
     var selectedCoach by remember { mutableStateOf<String?>(null) }
-    var selectedDate by remember { mutableStateOf<String?>(null) }
+    var selectedDate by remember { mutableStateOf<Date?>(null) }
     var selectedTime by remember { mutableStateOf<String?>(null) }
     var selectedOptions by remember { mutableStateOf(setOf<String>()) }
     var currentStep by remember { mutableStateOf(1) }
     var trainers by remember { mutableStateOf<List<Trainer>>(emptyList()) }
     val clientId by UserDataStore.getClientId(context).collectAsState(initial = null)
+    val formattedSelectedDate = remember(selectedDate) {
+        selectedDate?.let {
+            SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(it)
+        } ?: "Не выбрана"
+    }
 
     LaunchedEffect(Unit) {
         getTrainers(context,
@@ -135,13 +144,16 @@ fun BookingContent(navController: NavController) {
 
         StepContainer(visible = currentStep >= 3) {
             Text("Выберите дату", style = MaterialTheme.typography.titleMedium.copy(fontFamily = roboto))
-            PagerWeekCalendar(onDateSelected = {
-                selectedDate = it.toString()
-                coroutineScope.launch {
-                    currentStep = 4
-                    scrollState.animateScrollTo(scrollState.maxValue)
+            PagerWeekCalendar(
+                selectedDate = selectedDate ?: Calendar.getInstance().time, // Передаем текущую или выбранную дату
+                onDateSelected = { date ->
+                    selectedDate = date // Сохраняем Date объект
+                    coroutineScope.launch {
+                        currentStep = 4
+                        scrollState.animateScrollTo(scrollState.maxValue)
+                    }
                 }
-            })
+            )
         }
 
         StepContainer(visible = currentStep >= 4) {
@@ -186,7 +198,7 @@ fun BookingContent(navController: NavController) {
                         val route = "summary_screen/" +
                                 "${Uri.encode(selectedSport)}/" +
                                 "${Uri.encode(selectedCoach ?: "Без тренера")}/" +
-                                "${Uri.encode(selectedDate)}/" +
+                                "${Uri.encode(formattedSelectedDate)}/" +
                                 "${Uri.encode(selectedTime)}/" +
                                 "${Uri.encode(selectedOptions.joinToString(";"))}"
 
