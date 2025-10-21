@@ -27,6 +27,7 @@ import com.example.tennisapp.database.createBooking
 import com.example.tennisapp.roboto
 import com.example.tennisapp.utils.NotificationHelper
 import com.example.tennisapp.helpfun.convertToMillis
+import com.example.tennisapp.helpfun.convertToDatabaseFormat
 
 @Composable
 fun BookingSummaryScreen(
@@ -121,12 +122,27 @@ fun BookingSummaryScreen(
         Button(
             onClick = {
                 if (sport.isNotEmpty() && !date.isNullOrEmpty() && !time.isNullOrEmpty()) {
+                    val dbFormattedDate = convertToDatabaseFormat(date, time, context)
+
+                    // Логи для отладки
+                    Log.d("BookingDebug", "=== ДАННЫЕ БРОНИРОВАНИЯ ===")
+                    Log.d("BookingDebug", "Спорт: $sport")
+                    Log.d("BookingDebug", "Тренер: ${coach ?: "Без тренера"}")
+                    Log.d("BookingDebug", "Дата (оригинал): $date")
+                    Log.d("BookingDebug", "Время (оригинал): $time")
+                    Log.d("BookingDebug", "Дата для БД: $dbFormattedDate")
+                    Log.d("BookingDebug", "Опции: ${options.joinToString(", ")}")
+                    Log.d("BookingDebug", "Client ID: ${clientId ?: 0}")
+                    Log.d("BookingDebug", "Trainer ID: ${selectedTrainer?.id}")
+                    Log.d("BookingDebug", "==========================")
+
                     createBooking(
                         context = context,
                         clientId = clientId ?: 0,
                         trainerId = selectedTrainer?.id,
                         sport = sport,
-                        bookingTime = "${date ?: ""} ${time ?: ""}",
+                        bookingTime = dbFormattedDate,
+                        options = options,
                         onSuccess = {
                             val message = "Вы забронировали $sport на ${date ?: ""} в ${time ?: ""}"
                             NotificationHelper.showBookingNotification(
@@ -153,6 +169,8 @@ fun BookingSummaryScreen(
                         }
                     )
                 } else {
+                    Log.e("BookingDebug", "ОШИБКА: Не все поля заполнены")
+                    Log.e("BookingDebug", "Спорт: $sport, Дата: $date, Время: $time")
                     Toast.makeText(
                         context,
                         "Заполните все обязательные поля: вид спорта, дата и время.",

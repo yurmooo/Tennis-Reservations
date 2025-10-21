@@ -13,9 +13,17 @@ fun createBooking(
     trainerId: Int?,
     sport: String,
     bookingTime: String,
+    options: Set<String>,
     onSuccess: (String) -> Unit,
     onError: (String) -> Unit
 ) {
+    Log.d("CreateBooking", "=== НАЧАЛО СОЗДАНИЯ БРОНИРОВАНИЯ ===")
+    Log.d("CreateBooking", "clientId: $clientId")
+    Log.d("CreateBooking", "trainerId: $trainerId")
+    Log.d("CreateBooking", "sport: $sport")
+    Log.d("CreateBooking", "bookingTime: $bookingTime")
+    Log.d("CreateBooking", "options: ${options.joinToString(", ")}")
+
     val url = "http://10.0.2.2/create_booking.php"
     val queue = Volley.newRequestQueue(context)
 
@@ -25,6 +33,7 @@ fun createBooking(
         put("sport", sport)
         put("booking_time", bookingTime)
         put("duration_minutes", 60)
+        put("options", if (options.isNotEmpty()) options.joinToString(";") else "")
     }
 
     val request = JsonObjectRequest(
