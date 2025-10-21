@@ -26,6 +26,7 @@ import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.database.createBooking
 import com.example.tennisapp.roboto
 import com.example.tennisapp.utils.NotificationHelper
+import com.example.tennisapp.helpfun.convertToMillis
 
 @Composable
 fun BookingSummaryScreen(
@@ -101,9 +102,10 @@ fun BookingSummaryScreen(
                         "Бронирование корта: $sport"
                     )
                     putExtra(CalendarContract.Events.EVENT_LOCATION, "Tennis & Padel Club")
-                    val startTime = System.currentTimeMillis() + 3600000
-                    putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startTime)
-                    putExtra(CalendarContract.EXTRA_EVENT_END_TIME, startTime + 60 * 60 * 1000)
+                    val startTimeMillis = convertToMillis(date, time, context)
+                    val endTimeMillis = startTimeMillis + 60 * 60 * 1000 // +1 час
+                    putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startTimeMillis)
+                    putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTimeMillis)
                 }
                 context.startActivity(intent)
             },
