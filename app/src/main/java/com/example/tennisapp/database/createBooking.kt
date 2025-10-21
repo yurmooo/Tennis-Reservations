@@ -26,6 +26,7 @@ fun createBooking(
 
     val url = "http://10.0.2.2/create_booking.php"
     val queue = Volley.newRequestQueue(context)
+    val timePart = bookingTime.substring(11, 16)
 
     val json = JSONObject().apply {
         put("client_id", clientId)
@@ -57,6 +58,5 @@ fun createBooking(
             onError(error.message ?: "Ошибка сети")
         }
     )
-
     queue.add(request)
 }

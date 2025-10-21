@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.tennisapp.data.Trainer
 import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.database.createBooking
+import com.example.tennisapp.database.getTrainers
 import com.example.tennisapp.roboto
 import com.example.tennisapp.utils.NotificationHelper
 import com.example.tennisapp.helpfun.convertToMillis
@@ -49,6 +51,26 @@ fun BookingSummaryScreen(
     val totalPrice = basePrice + coachPrice + optionsPrice
     val clientId by UserDataStore.getClientId(context).collectAsState(initial = null)
     var selectedTrainer: Trainer? = null
+    var trainers by remember { mutableStateOf<List<Trainer>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        getTrainers(context,
+            onSuccess = { trainersList ->
+                trainers = trainersList
+            },
+            onError = { error ->
+                Log.e("BookingSummary", "Ошибка загрузки тренеров: $error")
+            }
+        )
+    }
+
+    val selectedTrainerId = remember(coach, trainers) {
+        if (coach != null && coach != "Без тренера") {
+            trainers.find { it.name == coach }?.id
+        } else {
+            null
+        }
+    }
 
     BackHandler {
         showExitDialog = true
@@ -133,13 +155,13 @@ fun BookingSummaryScreen(
                     Log.d("BookingDebug", "Дата для БД: $dbFormattedDate")
                     Log.d("BookingDebug", "Опции: ${options.joinToString(", ")}")
                     Log.d("BookingDebug", "Client ID: ${clientId ?: 0}")
-                    Log.d("BookingDebug", "Trainer ID: ${selectedTrainer?.id}")
+                    Log.d("BookingDebug", "Trainer ID: $selectedTrainerId")
                     Log.d("BookingDebug", "==========================")
 
                     createBooking(
                         context = context,
                         clientId = clientId ?: 0,
-                        trainerId = selectedTrainer?.id,
+                        trainerId = selectedTrainerId,
                         sport = sport,
                         bookingTime = dbFormattedDate,
                         options = options,

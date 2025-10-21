@@ -4,6 +4,7 @@ package com.example.tennisapp.ui.screens
 
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExitTransition
@@ -45,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.tennisapp.data.Trainer
 import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.database.createBooking
+import com.example.tennisapp.database.getBookings
 import com.example.tennisapp.database.getTrainers
 import java.util.Calendar
 import java.util.Date
@@ -60,6 +62,8 @@ fun BookingContent(navController: NavController) {
     var selectedCoach by remember { mutableStateOf<String?>(null) }
     var selectedDate by remember { mutableStateOf<Date?>(null) }
     var selectedTime by remember { mutableStateOf<String?>(null) }
+    var bookedTimes by remember { mutableStateOf<Set<String>>(emptySet()) } // Занятые времена
+    var isLoadingTimes by remember { mutableStateOf(false) } // Загрузка данных
     var selectedOptions by remember { mutableStateOf(setOf<String>()) }
     var currentStep by remember { mutableStateOf(1) }
     var trainers by remember { mutableStateOf<List<Trainer>>(emptyList()) }
@@ -68,6 +72,30 @@ fun BookingContent(navController: NavController) {
         selectedDate?.let {
             SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(it)
         } ?: "Не выбрана"
+    }
+
+    // При изменении даты загружаем занятые слоты
+    LaunchedEffect(selectedDate) {
+        selectedDate?.let { date ->
+            val dateString = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
+            isLoadingTimes = true
+
+            getBookings(
+                context = context,
+                date = dateString,
+                onSuccess = { bookedSlots ->
+                    bookedTimes = bookedSlots.toSet()
+                    isLoadingTimes = false
+                    Log.d("BookingContent", "Занятые слоты: $bookedTimes")
+                },
+                onError = { error ->
+                    Log.e("BookingContent", "Ошибка загрузки слотов: $error")
+                    bookedTimes = emptySet()
+                    isLoadingTimes = false
+                    Toast.makeText(context, "Ошибка загрузки доступных времен", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -158,16 +186,50 @@ fun BookingContent(navController: NavController) {
 
         StepContainer(visible = currentStep >= 4) {
             Text("Выберите время", style = MaterialTheme.typography.titleMedium.copy(fontFamily = roboto))
-            val times = listOf("09:00", "10:00", "11:30", "13:00", "15:00", "17:00")
 
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                times.forEach { time ->
-                    TimeChip(time, selectedTime) {
-                        selectedTime = time
-                        coroutineScope.launch {
-                            currentStep = 5
-                            scrollState.animateScrollTo(scrollState.maxValue)
-                        }
+            if (isLoadingTimes) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                Text("Загрузка доступных времен...", fontFamily = roboto)
+            } else {
+                val times = listOf("09:00", "10:00", "11:30", "13:00", "15:00", "17:00")
+
+                // Показываем сообщение если все времена заняты
+                val availableTimes = times.filter { it !in bookedTimes }
+                if (availableTimes.isEmpty()) {
+                    Text(
+                        "На выбранную дату нет свободных временных слотов",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color.Red,
+                            fontFamily = roboto
+                        ),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    times.forEach { time ->
+                        val isBooked = time in bookedTimes
+
+                        TimeChip(
+                            time = time,
+                            selected = selectedTime,
+                            isBooked = isBooked, // Передаем статус занятости
+                            onClick = {
+                                if (!isBooked) {
+                                    selectedTime = time
+                                    coroutineScope.launch {
+                                        currentStep = 5
+                                        scrollState.animateScrollTo(scrollState.maxValue)
+                                    }
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Время $time уже занято",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -363,16 +425,32 @@ fun TrainerCard(trainer: Trainer, isSelected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun TimeChip(time: String, selected: String?, onClick: () -> Unit) {
+fun TimeChip(time: String, selected: String?, isBooked: Boolean = false, onClick: () -> Unit) {
+    val backgroundColor = when {
+        isBooked -> Color(0xFFCCCCCC) // Серый для занятых
+        selected == time -> Color(0xFF4CAF50) // Зеленый для выбранных
+        else -> Color.White // Белый для свободных
+    }
+
+    val textColor = when {
+        isBooked -> Color(0xFF666666) // Темно-серый для занятых
+        selected == time -> Color.White // Белый для выбранных
+        else -> Color.Black // Черный для свободных
+    }
+
     Surface(
-        color = if (selected == time) Color(0xFF4CAF50) else Color.White,
+        color = backgroundColor,
         shape = RoundedCornerShape(50),
-        border = if (selected != time) BorderStroke(1.dp, Color.Gray) else null,
-        modifier = Modifier.clickable { onClick() }
+        border = if (!isBooked && selected != time) BorderStroke(1.dp, Color.Gray) else null,
+        modifier = Modifier
+            .clickable(
+                enabled = !isBooked, // Блокируем клик для занятых
+                onClick = onClick
+            )
     ) {
         Text(
-            text = time,
-            color = if (selected == time) Color.White else Color.Black,
+            text = if (isBooked) "$time" else time,
+            color = textColor,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             fontFamily = roboto
         )
