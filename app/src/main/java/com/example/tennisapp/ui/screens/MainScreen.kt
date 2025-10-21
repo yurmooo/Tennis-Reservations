@@ -37,6 +37,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.navArgument
 import com.example.tennisapp.ui.components.BookingButton
 
 @Composable
@@ -91,7 +93,20 @@ fun MainScreen() {
             composable ("booking_screen") {
                 BookingContent(navController = navController)
             }
-            composable ("summary_screen/{sport}/{coach}/{date}/{time}/{options}") { backStackEntry ->
+            composable (
+                "summary_screen/{sport}/{coach}/{date}/{time}?options={options}",
+                arguments = listOf(
+                    navArgument("sport") { type = NavType.StringType },
+                    navArgument("coach") { type = NavType.StringType },
+                    navArgument("date") { type = NavType.StringType },
+                    navArgument("time") { type = NavType.StringType },
+                    navArgument("options") {
+                        type = NavType.StringType
+                        defaultValue = "none"
+                        nullable = true
+                    }
+                )
+            ) { backStackEntry ->
                 val sport = backStackEntry.arguments?.getString("sport") ?: ""
                 val coach = backStackEntry.arguments?.getString("coach")
                 val date = backStackEntry.arguments?.getString("date")

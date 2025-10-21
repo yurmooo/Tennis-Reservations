@@ -195,13 +195,16 @@ fun BookingContent(navController: NavController) {
             Button(
                 onClick = {
                     if (selectedSport != null && selectedDate != null && selectedTime != null) {
-                        val route = "summary_screen/" +
-                                "${Uri.encode(selectedSport)}/" +
-                                "${Uri.encode(selectedCoach ?: "Без тренера")}/" +
-                                "${Uri.encode(formattedSelectedDate)}/" +
-                                "${Uri.encode(selectedTime)}/" +
-                                "${Uri.encode(selectedOptions.joinToString(";"))}"
-
+                        val route = buildString {
+                            append("summary_screen/")
+                            append("${Uri.encode(selectedSport ?: "")}/")
+                            append("${Uri.encode(selectedCoach ?: "Без тренера")}/")
+                            append("${Uri.encode(formattedSelectedDate ?: "")}/")
+                            append(Uri.encode(selectedTime ?: ""))
+                            if (selectedOptions.isNotEmpty()) {
+                                append("?options=${Uri.encode(selectedOptions.joinToString(";"))}")
+                            }
+                        }
                         navController.navigate(route)
                     } else {
                         Toast.makeText(

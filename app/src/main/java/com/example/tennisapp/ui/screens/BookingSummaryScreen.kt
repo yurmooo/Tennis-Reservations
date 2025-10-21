@@ -26,7 +26,6 @@ import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.database.createBooking
 import com.example.tennisapp.roboto
 import com.example.tennisapp.utils.NotificationHelper
-import com.example.tennisapp.ui.screens.NotificationsViewModel
 
 @Composable
 fun BookingSummaryScreen(
@@ -119,24 +118,45 @@ fun BookingSummaryScreen(
 
         Button(
             onClick = {
-                val message = "Вы забронировали $sport на ${date ?: ""} в ${time ?: ""}"
-                NotificationHelper.showBookingNotification(context, "Бронирование подтверждено", message)
-                notificationsViewModel.addNotification("Бронирование подтверждено", message)
-                onConfirm()
-                createBooking(
-                    context,
-                    clientId = clientId ?: 0,
-                    trainerId = selectedTrainer?.id,
-                    sport = sport,
-                    bookingTime = "${date ?: ""} ${time ?: ""}",
-                    onSuccess = {
-                        Toast.makeText(context, "Бронирование создано", Toast.LENGTH_SHORT).show()
-                    },
-                    onError = { errorMsg ->
-                        Toast.makeText(context, "Ошибка: $errorMsg", Toast.LENGTH_SHORT).show()
-                        Log.e("BookingError", errorMsg)
-                    }
-                )
+                if (sport.isNotEmpty() && !date.isNullOrEmpty() && !time.isNullOrEmpty()) {
+                    createBooking(
+                        context = context,
+                        clientId = clientId ?: 0,
+                        trainerId = selectedTrainer?.id,
+                        sport = sport,
+                        bookingTime = "${date ?: ""} ${time ?: ""}",
+                        onSuccess = {
+                            val message = "Вы забронировали $sport на ${date ?: ""} в ${time ?: ""}"
+                            NotificationHelper.showBookingNotification(
+                                context,
+                                "Бронирование подтверждено",
+                                message
+                            )
+                            notificationsViewModel.addNotification("Бронирование подтверждено", message)
+
+                            Toast.makeText(
+                                context,
+                                "Бронирование успешно создано!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            onConfirm()
+                        },
+                        onError = { errorMsg ->
+                            Log.e("BookingError", errorMsg)
+                            Toast.makeText(
+                                context,
+                                "Произошла ошибка при создании бронирования. Повторите попытку позже.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    )
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Заполните все обязательные поля: вид спорта, дата и время.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
             modifier = Modifier.fillMaxWidth()
