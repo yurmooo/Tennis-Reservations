@@ -50,7 +50,9 @@ import com.example.tennisapp.roboto
 @Composable
 fun ProfileContent(
     navController: NavController,
-    onMyBookingsClick: () -> Unit = {},
+    onMyBookingsClick: () -> Unit = {
+        navController.navigate("mybookings_screen")
+    },
     onEditClick: () -> Unit = {},
     onThemeClick: () -> Unit = {}
 ) {

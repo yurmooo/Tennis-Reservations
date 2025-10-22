@@ -131,6 +131,9 @@ fun MainScreen() {
             composable ("notifications_screen"){
                 NotificationsContent(viewModel = notificationsViewModel)
             }
+            composable ("mybookings_screen"){
+                MyBookingsScreen()
+            }
             composable("authorization_screen") {
                 val context = LocalContext.current
 
