@@ -83,14 +83,6 @@ fun BookingSummaryScreen(
             .padding(20.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        Text(
-            "Подтверждение бронирования",
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontFamily = roboto
-            )
-        )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         SummaryItem("Вид спорта", sport)

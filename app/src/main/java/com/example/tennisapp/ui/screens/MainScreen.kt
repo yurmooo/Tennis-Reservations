@@ -53,14 +53,16 @@ fun MainScreen() {
             if (currentDestination?.route != "splash_screen" &&
                 currentDestination?.route != "authorization_screen") {
                 AppBar(
-                    title = when (currentDestination?.route) {
-                        "main_screen" -> "Главная"
-                        "booking_screen" -> "Бронирование"
-                        "profile_screen" -> "Профиль"
-                        "notifications_screen" -> "Уведомления"
+                    title = when {
+                        currentDestination?.route == "main_screen" -> "Главная"
+                        currentDestination?.route == "booking_screen" -> "Бронирование"
+                        currentDestination?.route == "profile_screen" -> "Профиль"
+                        currentDestination?.route == "notifications_screen" -> "Уведомления"
+                        currentDestination?.route == "mybookings_screen" -> "Мои бронирования"
+                        currentDestination?.route?.startsWith("summary_screen") == true -> "Подтверждение бронирования"
                         else -> "Tennis App"
                     },
-                    showBackButton = currentDestination?.route == "notifications_screen",
+                    showBackButton = currentDestination?.route == "notifications_screen" || currentDestination?.route == "mybookings_screen",
                     onBackClick = { navController.popBackStack() },
                     onNotificationsClick = { navController.navigate("notifications_screen") },
                     showMarkReadButton = currentDestination?.route == "notifications_screen",
@@ -69,9 +71,15 @@ fun MainScreen() {
             }
         },
         bottomBar = {
-            if (currentDestination?.route != "splash_screen" &&
-                currentDestination?.route != "notifications_screen" &&
-                currentDestination?.route != "authorization_screen") {
+            val route = currentDestination?.route
+
+            if (
+                route != null &&
+                route != "splash_screen" &&
+                route != "notifications_screen" &&
+                route != "authorization_screen" &&
+                !route.startsWith("summary_screen")
+            ) {
                 BottomBar(
                     navController = navController,
                     currentDestination = currentDestination
