@@ -38,6 +38,7 @@ fun BookingSummaryScreen(
     date: String?,
     time: String?,
     options: Set<String>,
+    totalPrice: Int,
     notificationsViewModel: NotificationsViewModel,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
@@ -45,10 +46,7 @@ fun BookingSummaryScreen(
     var showExitDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val basePrice = if (sport == "Теннис") 1500 else 1800
-    val coachPrice = if (coach != null && coach != "Без тренера") 800 else 0
-    val optionsPrice = options.size * 200
-    val totalPrice = basePrice + coachPrice + optionsPrice
+    val finalPrice = totalPrice // уже пришёл из BookingContent
     val clientId by UserDataStore.getClientId(context).collectAsState(initial = null)
     var selectedTrainer: Trainer? = null
     var trainers by remember { mutableStateOf<List<Trainer>>(emptyList()) }
@@ -97,7 +95,7 @@ fun BookingSummaryScreen(
         Divider(modifier = Modifier.padding(vertical = 16.dp))
 
         Text(
-            "Итоговая стоимость: $totalPrice ₽",
+            "Итоговая стоимость: $finalPrice ₽",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontFamily = roboto,
                 fontWeight = FontWeight.Bold,
@@ -147,6 +145,7 @@ fun BookingSummaryScreen(
                     Log.d("BookingDebug", "Дата для БД: $dbFormattedDate")
                     Log.d("BookingDebug", "Опции: ${options.joinToString(", ")}")
                     Log.d("BookingDebug", "Client ID: ${clientId ?: 0}")
+                    Log.d("BookingDebug", "Total Price: $totalPrice")
                     Log.d("BookingDebug", "Trainer ID: $selectedTrainerId")
                     Log.d("BookingDebug", "==========================")
 
@@ -156,6 +155,7 @@ fun BookingSummaryScreen(
                         trainerId = selectedTrainerId,
                         sport = sport,
                         bookingTime = dbFormattedDate,
+                        totalPrice = totalPrice,
                         options = options,
                         onSuccess = {
                             val message = "Вы забронировали $sport на ${date ?: ""} в ${time ?: ""}"

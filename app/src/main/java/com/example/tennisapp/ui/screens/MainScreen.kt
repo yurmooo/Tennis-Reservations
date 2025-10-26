@@ -102,12 +102,13 @@ fun MainScreen() {
                 BookingContent(navController = navController)
             }
             composable (
-                "summary_screen/{sport}/{coach}/{date}/{time}?options={options}",
+                "summary_screen/{sport}/{coach}/{date}/{time}/{totalPrice}?options={options}",
                 arguments = listOf(
                     navArgument("sport") { type = NavType.StringType },
                     navArgument("coach") { type = NavType.StringType },
                     navArgument("date") { type = NavType.StringType },
                     navArgument("time") { type = NavType.StringType },
+                    navArgument("totalPrice") { type = NavType.IntType },
                     navArgument("options") {
                         type = NavType.StringType
                         defaultValue = "none"
@@ -119,6 +120,7 @@ fun MainScreen() {
                 val coach = backStackEntry.arguments?.getString("coach")
                 val date = backStackEntry.arguments?.getString("date")
                 val time = backStackEntry.arguments?.getString("time")
+                val totalPrice = backStackEntry.arguments?.getInt("totalPrice") ?: 0
                 val options = backStackEntry.arguments?.getString("options")?.split(";")?.toSet() ?: emptySet()
 
                 val notificationsViewModel: NotificationsViewModel = viewModel()
@@ -128,6 +130,7 @@ fun MainScreen() {
                     coach = coach,
                     date = date,
                     time = time,
+                    totalPrice = totalPrice,
                     options = options,
                     notificationsViewModel = notificationsViewModel,
                     onConfirm = { navController.popBackStack("main_screen", inclusive = false) },

@@ -7,5 +7,6 @@ data class Booking(
     val options: String?,
     val bookingTime: String,
     val status: String,
-    val createdAt: String
+    val createdAt: String,
+    val totalPrice: Int
 )

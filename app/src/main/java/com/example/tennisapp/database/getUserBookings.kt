@@ -35,7 +35,8 @@ fun getUserBookings(
                                 options = obj.optString("options", ""),
                                 bookingTime = obj.getString("booking_time"),
                                 status = obj.optString("status", "booked"),
-                                createdAt = obj.optString("created_at", "")
+                                createdAt = obj.optString("created_at", ""),
+                                totalPrice = obj.optInt("total_price", 0)
                             )
                         )
                     }

@@ -24,6 +24,8 @@ import com.example.tennisapp.data.UserDataStore
 import com.example.tennisapp.database.cancelBooking
 import com.example.tennisapp.database.getUserBookings
 import com.example.tennisapp.roboto
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -42,7 +44,23 @@ fun MyBookingsScreen() {
                 context = context,
                 clientId = it,
                 onSuccess = { list ->
-                    bookings = list
+                    // 🔽 Обновляем статус бронирования, если оно уже прошло
+                    val updatedList = list.map { booking ->
+                        val isPast = try {
+                            val format = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                            val bookingDate = format.parse(booking.bookingTime)
+                            val now = Date()
+                            bookingDate?.before(now) == true
+                        } catch (e: Exception) {
+                            false
+                        }
+
+                        if (isPast && booking.status.lowercase() == "booked") {
+                            booking.copy(status = "Completed")
+                        } else booking
+                    }
+
+                    bookings = updatedList
                     isLoading = false
                 },
                 onError = { error ->
@@ -100,17 +118,11 @@ fun MyBookingsScreen() {
                 }
             }
 
-            // Диалог подтверждения отмены
             if (showCancelDialog && selectedBookingId != null) {
                 AlertDialog(
                     onDismissRequest = { showCancelDialog = false },
                     title = { Text("Отменить бронирование?", fontFamily = roboto) },
-                    text = {
-                        Text(
-                            "Вы уверены, что хотите отменить это бронирование?",
-                            fontFamily = roboto
-                        )
-                    },
+                    text = { Text("Вы уверены, что хотите отменить это бронирование?", fontFamily = roboto) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -153,8 +165,9 @@ fun MyBookingsScreen() {
 @Composable
 fun BookingCard(booking: Booking, onCancel: (Int) -> Unit) {
     val statusColor = when (booking.status.lowercase()) {
-        "Забронировано" -> Color(0xFF4CAF50)
-        "Отменено" -> Color(0xFFD32F2F)
+        "booked" -> Color(0xFF4CAF50)
+        "completed" -> Color(0xFF2196F3)
+        "cancelled" -> Color(0xFFD32F2F)
         else -> Color.Gray
     }
 
@@ -182,10 +195,7 @@ fun BookingCard(booking: Booking, onCancel: (Int) -> Unit) {
                         .background(Color(0xFF4CAF50).copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        sportEmoji,
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize
-                    )
+                    Text(sportEmoji, fontSize = MaterialTheme.typography.titleLarge.fontSize)
                 }
 
                 Text(
@@ -195,48 +205,36 @@ fun BookingCard(booking: Booking, onCancel: (Int) -> Unit) {
                         fontFamily = roboto
                     )
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    "${booking.totalPrice} ₽",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = roboto,
+                        color = Color(0xFF4CAF50)
+                    )
+                )
             }
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            Text(
-                "Тренер: ${booking.trainerName ?: "Без тренера"}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color(0xFF333333),
-                    fontFamily = roboto
-                )
+            Text("Тренер: ${booking.trainerName ?: "Без тренера"}",
+                style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF333333), fontFamily = roboto)
             )
 
             if (!booking.options.isNullOrEmpty()) {
                 Text(
                     "Опции: ${booking.options}",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color(0xFF666666),
-                        fontFamily = roboto
-                    )
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF666666), fontFamily = roboto)
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                "🗓 ${booking.bookingTime}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontFamily = roboto,
-                    color = Color(0xFF444444)
-                )
-            )
-
-            Text(
-                "📅 Создано: ${booking.createdAt}",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color.Gray,
-                    fontFamily = roboto
-                )
-            )
+            Text("🗓 ${booking.bookingTime}", style = MaterialTheme.typography.bodyMedium.copy(fontFamily = roboto, color = Color(0xFF444444)))
+            Text("📅 Создано: ${booking.createdAt}", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray, fontFamily = roboto))
 
             Spacer(modifier = Modifier.height(10.dp))
-
             Divider(color = Color(0xFFE0E0E0), thickness = 1.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -246,7 +244,12 @@ fun BookingCard(booking: Booking, onCancel: (Int) -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = booking.status.uppercase(),
+                    text = when (booking.status.lowercase()) {
+                        "completed" -> "ЗАВЕРШЕНО ✅"
+                        "booked" -> "АКТИВНО ✅"
+                        "cancelled" -> "ОТМЕНЕНО ❌"
+                        else -> booking.status.uppercase()
+                    },
                     color = statusColor,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
@@ -273,3 +276,4 @@ fun BookingCard(booking: Booking, onCancel: (Int) -> Unit) {
         }
     }
 }
+

@@ -161,6 +161,7 @@ fun BookingContent(navController: NavController) {
                 TrainerCard(
                     trainer = trainer,
                     isSelected = selectedCoach == trainer.name,
+                    priceText = if (trainer.name == "Без тренера") "+0₽" else "+800₽",
                     onClick = {
                         selectedCoach = trainer.name
                         currentStep = 3
@@ -209,11 +210,11 @@ fun BookingContent(navController: NavController) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     times.forEach { time ->
                         val isBooked = time in bookedTimes
-
                         TimeChip(
                             time = time,
                             selected = selectedTime,
-                            isBooked = isBooked, // Передаем статус занятости
+                            selectedDate = selectedDate, // ✅ добавляем это
+                            isBooked = isBooked,
                             onClick = {
                                 if (!isBooked) {
                                     selectedTime = time
@@ -221,12 +222,6 @@ fun BookingContent(navController: NavController) {
                                         currentStep = 5
                                         scrollState.animateScrollTo(scrollState.maxValue)
                                     }
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Время $time уже занято",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
                                 }
                             }
                         )
@@ -257,16 +252,30 @@ fun BookingContent(navController: NavController) {
             Button(
                 onClick = {
                     if (selectedSport != null && selectedDate != null && selectedTime != null) {
+                        // Рассчитываем итоговую стоимость
+                        val basePrice = when (selectedSport) {
+                            "Теннис" -> 1500
+                            "Падел" -> 2000
+                            else -> 0
+                        }
+                        val coachPrice = if (selectedCoach != null && selectedCoach != "Без тренера") 800 else 0
+                        val optionsPrice = calculateOptionsPrice(selectedOptions)
+                        val totalPrice = basePrice + coachPrice + optionsPrice
+
+                        // Правильный формат маршрута
                         val route = buildString {
                             append("summary_screen/")
                             append("${Uri.encode(selectedSport ?: "")}/")
                             append("${Uri.encode(selectedCoach ?: "Без тренера")}/")
                             append("${Uri.encode(formattedSelectedDate ?: "")}/")
-                            append(Uri.encode(selectedTime ?: ""))
+                            append("${Uri.encode(selectedTime ?: "")}/")
+                            append("$totalPrice") // Цена как отдельный параметр
                             if (selectedOptions.isNotEmpty()) {
                                 append("?options=${Uri.encode(selectedOptions.joinToString(";"))}")
                             }
                         }
+
+                        Log.d("Navigation", "Navigating to: $route")
                         navController.navigate(route)
                     } else {
                         Toast.makeText(
@@ -372,7 +381,12 @@ fun SportTab(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun TrainerCard(trainer: Trainer, isSelected: Boolean, onClick: () -> Unit) {
+fun TrainerCard(
+    trainer: Trainer,
+    isSelected: Boolean,
+    priceText: String, // Добавляем параметр для цены
+    onClick: () -> Unit
+) {
     val borderColor by animateColorAsState(
         targetValue = if (isSelected) Color(0xFF4CAF50) else Color(0xFFE0E0E0),
         animationSpec = tween(250),
@@ -419,37 +433,73 @@ fun TrainerCard(trainer: Trainer, isSelected: Boolean, onClick: () -> Unit) {
                         color = Color.Gray
                     )
                 )
+                Text(
+                    text = priceText,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = roboto,
+                        color = Color.Green
+                    )
+                )
             }
         }
     }
 }
 
 @Composable
-fun TimeChip(time: String, selected: String?, isBooked: Boolean = false, onClick: () -> Unit) {
+fun TimeChip(
+    time: String,
+    selected: String?,
+    selectedDate: Date?, // Дата для сравнения
+    isBooked: Boolean = false,
+    onClick: () -> Unit
+) {
+    val now = remember { Calendar.getInstance() }
+
+    // Разделяем строку "HH:mm"
+    val timeParts = time.split(":")
+    val hour = timeParts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
+
+    // Создаем календарь для выбранного слота
+    val slotCalendar = Calendar.getInstance().apply {
+        selectedDate?.let { date ->
+            timeInMillis = date.time // ✅ правильно присваиваем миллисекунды
+        }
+        set(Calendar.HOUR_OF_DAY, hour)
+        set(Calendar.MINUTE, minute)
+        set(Calendar.SECOND, 0)
+    }
+
+    // Проверяем, прошло ли это время
+    val isPast = slotCalendar.before(now)
+
+    // Цвета для разных состояний
     val backgroundColor = when {
-        isBooked -> Color(0xFFCCCCCC) // Серый для занятых
-        selected == time -> Color(0xFF4CAF50) // Зеленый для выбранных
-        else -> Color.White // Белый для свободных
+        isPast -> Color(0xFFEEEEEE)
+        isBooked -> Color(0xFFCCCCCC)
+        selected == time -> Color(0xFF4CAF50)
+        else -> Color.White
     }
 
     val textColor = when {
-        isBooked -> Color(0xFF666666) // Темно-серый для занятых
-        selected == time -> Color.White // Белый для выбранных
-        else -> Color.Black // Черный для свободных
+        isPast -> Color(0xFF999999)
+        isBooked -> Color(0xFF666666)
+        selected == time -> Color.White
+        else -> Color.Black
     }
 
+    // Отображение кнопки
     Surface(
         color = backgroundColor,
         shape = RoundedCornerShape(50),
-        border = if (!isBooked && selected != time) BorderStroke(1.dp, Color.Gray) else null,
-        modifier = Modifier
-            .clickable(
-                enabled = !isBooked, // Блокируем клик для занятых
-                onClick = onClick
-            )
+        border = if (!isBooked && !isPast && selected != time) BorderStroke(1.dp, Color.Gray) else null,
+        modifier = Modifier.clickable(
+            enabled = !isBooked && !isPast,
+            onClick = onClick
+        )
     ) {
         Text(
-            text = if (isBooked) "$time" else time,
+            text = time,
             color = textColor,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             fontFamily = roboto
@@ -459,18 +509,63 @@ fun TimeChip(time: String, selected: String?, isBooked: Boolean = false, onClick
 
 @Composable
 fun OptionCheckbox(option: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    // Функция для получения цены опции
+    fun getOptionPrice(optionName: String): String {
+        return when (optionName) {
+            "Аренда ракеток", "Аренда падел-ракеток" -> "300 ₽"
+            "Вода" -> "0 ₽"
+            "Полотенце", "Мячи", "Мячи для падела" -> "50 ₽"
+            else -> "0 ₽"
+        }
+    }
+
+    val priceText = getOptionPrice(option)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween // Распределяем пространство между элементами
     ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
+        // Левая часть - чекбокс и название услуги
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f) // Занимает доступное пространство
+        ) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
+            )
+            Text(
+                text = option,
+                fontFamily = roboto,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        // Правая часть - цена
+        Text(
+            text = if (priceText == "0 ₽") "Бесплатно" else priceText,
+            fontFamily = roboto,
+            color = if (priceText == "0 ₽") Color.Gray else Color(0xFF4CAF50),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(start = 8.dp)
         )
-        Text(option, fontFamily = roboto)
     }
+}
+
+fun calculateOptionsPrice(options: Set<String>): Int {
+    var price = 0
+    options.forEach { option ->
+        price += when (option) {
+            "Аренда ракеток", "Аренда падел-ракеток" -> 300
+            "Полотенце", "Мячи", "Мячи для падела" -> 50
+            "Вода" -> 0
+            else -> 0
+        }
+    }
+    return price
 }
