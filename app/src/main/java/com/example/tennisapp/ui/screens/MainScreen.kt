@@ -3,7 +3,9 @@ package com.example.tennisapp.ui.screens
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,13 +34,22 @@ import com.example.tennisapp.ui.components.BottomBar
 import com.example.tennisapp.ui.components.CarouselSlider
 import com.example.tennisapp.ui.components.MonthlyStats
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.navArgument
+import com.example.tennisapp.data.UserDataStore
+import com.example.tennisapp.database.getUserStats
 import com.example.tennisapp.ui.components.BookingButton
 
 @Composable
@@ -176,6 +187,34 @@ fun MainContent(navController: NavController) {
         "https://img.freepik.com/photos-premium/raquette-tennis-fond-rose_51524-13927.jpg"
     )
 
+    val context = LocalContext.current
+    val clientId by UserDataStore.getClientId(context).collectAsState(initial = null)
+
+    var totalHours by remember { mutableStateOf(0) }
+    var totalVisits by remember { mutableStateOf(0) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Загружаем статистику при запуске
+    LaunchedEffect(clientId) {
+        if (clientId != null) {
+            getUserStats(
+                context = context,
+                clientId = clientId!!,
+                onSuccess = { hours, visits ->
+                    totalHours = hours
+                    totalVisits = visits
+                    isLoading = false
+                },
+                onError = { error ->
+                    Log.e("MainContent", "Ошибка загрузки статистики: $error")
+                    isLoading = false
+                }
+            )
+        } else {
+            isLoading = false
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -183,7 +222,25 @@ fun MainContent(navController: NavController) {
     ) {
         CarouselSlider(images = images)
 
-        MonthlyStats(hours = 12, maxHours = 50, visits = 7, maxVisits = 9)
+        if (isLoading) {
+            // Показываем индикатор загрузки
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFFFFC107))
+            }
+        } else {
+            MonthlyStats(
+                hours = totalHours,
+                maxHours = 50, // Максимальное количество часов для отображения прогресса
+                visits = totalVisits,
+                maxVisits = 9 // Максимальное количество посещений для отображения
+            )
+        }
 
         BookingButton(navController)
     }
