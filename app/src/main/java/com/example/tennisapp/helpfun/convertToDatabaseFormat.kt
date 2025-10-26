@@ -10,7 +10,6 @@ internal fun convertToDatabaseFormat(dateString: String?, timeString: String?, c
     return try {
         Log.d("DateConversion", "Начало конвертации: dateString='$dateString', timeString='$timeString'")
 
-        // Парсим из формата "dd.MM.yyyy HH:mm"
         val inputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
         val dateTimeString = "$dateString $timeString"
         Log.d("DateConversion", "Объединенная строка: '$dateTimeString'")
@@ -18,13 +17,12 @@ internal fun convertToDatabaseFormat(dateString: String?, timeString: String?, c
         val date = inputFormat.parse(dateTimeString)
         Log.d("DateConversion", "Распарсена дата: $date")
 
-        // Попробуем разные форматы для БД
         val formatsToTry = listOf(
             "yyyy-MM-dd HH:mm:ss",
             "yyyy-MM-dd'T'HH:mm:ss",
             "yyyy-MM-dd'T'HH:mm:ss.SSS",
             "yyyy-MM-dd HH:mm:ss.SSS",
-            "dd.MM.yyyy HH:mm:ss" // оригинальный формат
+            "dd.MM.yyyy HH:mm:ss"
         )
 
         var result = ""
@@ -34,7 +32,6 @@ internal fun convertToDatabaseFormat(dateString: String?, timeString: String?, c
             Log.d("DateConversion", "Формат '$format': '$result'")
         }
 
-        // Используем первый формат по умолчанию
         val finalFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val finalResult = finalFormat.format(date ?: Date())
         Log.d("DateConversion", "Финальный результат для БД: '$finalResult'")

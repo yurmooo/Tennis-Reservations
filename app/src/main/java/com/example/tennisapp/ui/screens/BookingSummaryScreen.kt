@@ -46,7 +46,7 @@ fun BookingSummaryScreen(
     var showExitDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val finalPrice = totalPrice // уже пришёл из BookingContent
+    val finalPrice = totalPrice
     val clientId by UserDataStore.getClientId(context).collectAsState(initial = null)
     var selectedTrainer: Trainer? = null
     var trainers by remember { mutableStateOf<List<Trainer>>(emptyList()) }
@@ -116,7 +116,7 @@ fun BookingSummaryScreen(
                     )
                     putExtra(CalendarContract.Events.EVENT_LOCATION, "Tennis & Padel Club")
                     val startTimeMillis = convertToMillis(date, time, context)
-                    val endTimeMillis = startTimeMillis + 60 * 60 * 1000 // +1 час
+                    val endTimeMillis = startTimeMillis + 60 * 60 * 1000
                     putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startTimeMillis)
                     putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTimeMillis)
                 }

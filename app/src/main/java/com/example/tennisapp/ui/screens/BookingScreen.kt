@@ -16,7 +16,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import coil.compose.AsyncImage
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -45,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.platform.LocalContext
 import com.example.tennisapp.data.Trainer
 import com.example.tennisapp.data.UserDataStore
-import com.example.tennisapp.database.createBooking
 import com.example.tennisapp.database.getBookings
 import com.example.tennisapp.database.getTrainers
 import java.util.Calendar
@@ -62,8 +59,8 @@ fun BookingContent(navController: NavController) {
     var selectedCoach by remember { mutableStateOf<String?>(null) }
     var selectedDate by remember { mutableStateOf<Date?>(null) }
     var selectedTime by remember { mutableStateOf<String?>(null) }
-    var bookedTimes by remember { mutableStateOf<Set<String>>(emptySet()) } // Занятые времена
-    var isLoadingTimes by remember { mutableStateOf(false) } // Загрузка данных
+    var bookedTimes by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var isLoadingTimes by remember { mutableStateOf(false) }
     var selectedOptions by remember { mutableStateOf(setOf<String>()) }
     var currentStep by remember { mutableStateOf(1) }
     var trainers by remember { mutableStateOf<List<Trainer>>(emptyList()) }
@@ -74,7 +71,6 @@ fun BookingContent(navController: NavController) {
         } ?: "Не выбрана"
     }
 
-    // При изменении даты загружаем занятые слоты
     LaunchedEffect(selectedDate) {
         selectedDate?.let { date ->
             val dateString = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
@@ -101,7 +97,6 @@ fun BookingContent(navController: NavController) {
     LaunchedEffect(Unit) {
         getTrainers(context,
             onSuccess = { trainersList ->
-                // Добавляем вариант "Без тренера"
                 trainers = trainersList + Trainer(
                     id = 0,
                     name = "Без тренера",
@@ -111,7 +106,6 @@ fun BookingContent(navController: NavController) {
             },
             onError = { error ->
                 Toast.makeText(context, "Ошибка: $error", Toast.LENGTH_SHORT).show()
-                // На случай ошибки — хотя бы "Без тренера"
                 trainers = listOf(
                     Trainer(
                         id = 0,
@@ -174,9 +168,9 @@ fun BookingContent(navController: NavController) {
         StepContainer(visible = currentStep >= 3) {
             Text("Выберите дату", style = MaterialTheme.typography.titleMedium.copy(fontFamily = roboto))
             PagerWeekCalendar(
-                selectedDate = selectedDate ?: Calendar.getInstance().time, // Передаем текущую или выбранную дату
+                selectedDate = selectedDate ?: Calendar.getInstance().time,
                 onDateSelected = { date ->
-                    selectedDate = date // Сохраняем Date объект
+                    selectedDate = date
                     coroutineScope.launch {
                         currentStep = 4
                         scrollState.animateScrollTo(scrollState.maxValue)
@@ -194,7 +188,6 @@ fun BookingContent(navController: NavController) {
             } else {
                 val times = listOf("09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00")
 
-                // Показываем сообщение если все времена заняты
                 val availableTimes = times.filter { it !in bookedTimes }
                 if (availableTimes.isEmpty()) {
                     Text(
@@ -213,7 +206,7 @@ fun BookingContent(navController: NavController) {
                         TimeChip(
                             time = time,
                             selected = selectedTime,
-                            selectedDate = selectedDate, // ✅ добавляем это
+                            selectedDate = selectedDate,
                             isBooked = isBooked,
                             onClick = {
                                 if (!isBooked) {
@@ -252,7 +245,6 @@ fun BookingContent(navController: NavController) {
             Button(
                 onClick = {
                     if (selectedSport != null && selectedDate != null && selectedTime != null) {
-                        // Рассчитываем итоговую стоимость
                         val basePrice = when (selectedSport) {
                             "Теннис" -> 1500
                             "Падел" -> 2000
@@ -262,14 +254,13 @@ fun BookingContent(navController: NavController) {
                         val optionsPrice = calculateOptionsPrice(selectedOptions)
                         val totalPrice = basePrice + coachPrice + optionsPrice
 
-                        // Правильный формат маршрута
                         val route = buildString {
                             append("summary_screen/")
                             append("${Uri.encode(selectedSport ?: "")}/")
                             append("${Uri.encode(selectedCoach ?: "Без тренера")}/")
                             append("${Uri.encode(formattedSelectedDate ?: "")}/")
                             append("${Uri.encode(selectedTime ?: "")}/")
-                            append("$totalPrice") // Цена как отдельный параметр
+                            append("$totalPrice")
                             if (selectedOptions.isNotEmpty()) {
                                 append("?options=${Uri.encode(selectedOptions.joinToString(";"))}")
                             }
@@ -384,7 +375,7 @@ fun SportTab(text: String, selected: Boolean, onClick: () -> Unit) {
 fun TrainerCard(
     trainer: Trainer,
     isSelected: Boolean,
-    priceText: String, // Добавляем параметр для цены
+    priceText: String,
     onClick: () -> Unit
 ) {
     val borderColor by animateColorAsState(
@@ -449,31 +440,27 @@ fun TrainerCard(
 fun TimeChip(
     time: String,
     selected: String?,
-    selectedDate: Date?, // Дата для сравнения
+    selectedDate: Date?,
     isBooked: Boolean = false,
     onClick: () -> Unit
 ) {
     val now = remember { Calendar.getInstance() }
 
-    // Разделяем строку "HH:mm"
     val timeParts = time.split(":")
     val hour = timeParts.getOrNull(0)?.toIntOrNull() ?: 0
     val minute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
 
-    // Создаем календарь для выбранного слота
     val slotCalendar = Calendar.getInstance().apply {
         selectedDate?.let { date ->
-            timeInMillis = date.time // ✅ правильно присваиваем миллисекунды
+            timeInMillis = date.time
         }
         set(Calendar.HOUR_OF_DAY, hour)
         set(Calendar.MINUTE, minute)
         set(Calendar.SECOND, 0)
     }
 
-    // Проверяем, прошло ли это время
     val isPast = slotCalendar.before(now)
 
-    // Цвета для разных состояний
     val backgroundColor = when {
         isPast -> Color(0xFFEEEEEE)
         isBooked -> Color(0xFFCCCCCC)
@@ -488,7 +475,6 @@ fun TimeChip(
         else -> Color.Black
     }
 
-    // Отображение кнопки
     Surface(
         color = backgroundColor,
         shape = RoundedCornerShape(50),
@@ -509,7 +495,6 @@ fun TimeChip(
 
 @Composable
 fun OptionCheckbox(option: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    // Функция для получения цены опции
     fun getOptionPrice(optionName: String): String {
         return when (optionName) {
             "Аренда ракеток", "Аренда падел-ракеток" -> "300 ₽"
@@ -527,12 +512,11 @@ fun OptionCheckbox(option: String, checked: Boolean, onCheckedChange: (Boolean) 
             .clickable { onCheckedChange(!checked) }
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween // Распределяем пространство между элементами
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Левая часть - чекбокс и название услуги
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f) // Занимает доступное пространство
+            modifier = Modifier.weight(1f)
         ) {
             Checkbox(
                 checked = checked,
@@ -546,7 +530,6 @@ fun OptionCheckbox(option: String, checked: Boolean, onCheckedChange: (Boolean) 
             )
         }
 
-        // Правая часть - цена
         Text(
             text = if (priceText == "0 ₽") "Бесплатно" else priceText,
             fontFamily = roboto,

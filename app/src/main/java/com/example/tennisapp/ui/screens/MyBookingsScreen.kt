@@ -44,7 +44,6 @@ fun MyBookingsScreen() {
                 context = context,
                 clientId = it,
                 onSuccess = { list ->
-                    // 🔽 Обновляем статус бронирования, если оно уже прошло
                     val updatedList = list.map { booking ->
                         val isPast = try {
                             val format = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
@@ -276,4 +275,3 @@ fun BookingCard(booking: Booking, onCancel: (Int) -> Unit) {
         }
     }
 }
-

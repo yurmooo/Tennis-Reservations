@@ -68,7 +68,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Обработка результата запроса разрешений
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -78,10 +77,8 @@ class MainActivity : ComponentActivity() {
         when (requestCode) {
             1001 -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Разрешение предоставлено
                     Toast.makeText(this, "Разрешение на уведомления предоставлено", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Разрешение отклонено
                     Toast.makeText(this, "Разрешение на уведомления отклонено", Toast.LENGTH_SHORT).show()
                 }
             }

@@ -1,22 +1,15 @@
 package com.example.tennisapp.ui.screens
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,17 +26,13 @@ import com.example.tennisapp.database.authorizeUser
 import com.example.tennisapp.ui.components.BottomBar
 import com.example.tennisapp.ui.components.CarouselSlider
 import com.example.tennisapp.ui.components.MonthlyStats
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -194,7 +183,6 @@ fun MainContent(navController: NavController) {
     var totalVisits by remember { mutableStateOf(0) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Загружаем статистику при запуске
     LaunchedEffect(clientId) {
         if (clientId != null) {
             getUserStats(
@@ -223,7 +211,6 @@ fun MainContent(navController: NavController) {
         CarouselSlider(images = images)
 
         if (isLoading) {
-            // Показываем индикатор загрузки
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -236,9 +223,9 @@ fun MainContent(navController: NavController) {
         } else {
             MonthlyStats(
                 hours = totalHours,
-                maxHours = 50, // Максимальное количество часов для отображения прогресса
+                maxHours = 50,
                 visits = totalVisits,
-                maxVisits = 9 // Максимальное количество посещений для отображения
+                maxVisits = 9
             )
         }
 

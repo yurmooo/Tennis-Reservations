@@ -14,7 +14,7 @@ fun createBooking(
     sport: String,
     bookingTime: String,
     options: Set<String>,
-    totalPrice: Int, // Добавляем параметр общей цены
+    totalPrice: Int,
     onSuccess: (String) -> Unit,
     onError: (String) -> Unit
 ) {
@@ -24,7 +24,7 @@ fun createBooking(
     Log.d("CreateBooking", "sport: $sport")
     Log.d("CreateBooking", "bookingTime: $bookingTime")
     Log.d("CreateBooking", "options: ${options.joinToString(", ")}")
-    Log.d("CreateBooking", "totalPrice: $totalPrice") // Логируем цену
+    Log.d("CreateBooking", "totalPrice: $totalPrice")
 
     val url = "http://10.0.2.2/create_booking.php"
     val queue = Volley.newRequestQueue(context)
@@ -36,10 +36,9 @@ fun createBooking(
         put("booking_time", bookingTime)
         put("duration_minutes", 60)
         put("options", if (options.isNotEmpty()) options.joinToString(";") else "")
-        put("total_price", totalPrice) // Добавляем цену в JSON
+        put("total_price", totalPrice)
     }
 
-    // Остальной код без изменений...
     val request = JsonObjectRequest(
         Request.Method.POST, url, json,
         { response ->

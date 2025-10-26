@@ -120,7 +120,7 @@ fun AuthorizationContent(
                                 errorMessage = "Введите корректный номер и пароль"
                                 return@Button
                             }
-                            onAuthorizationClick(cleanedPhone, password) // Просто передаем данные
+                            onAuthorizationClick(cleanedPhone, password)
                         }
                     ) {
                         Text("Войти")
